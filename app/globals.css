@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+:root {
+  --sky: #5faedb;
+  --violet: #6e63b8;
+  --aubergine: #4b328b;
+  --mist: #f8fafc;
+  --ink: #21183d;
+  --muted: #6b6680;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 46%, #ffffff 100%);
+  font-family: var(--font-inter), Arial, sans-serif;
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-playfair), Georgia, serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+::selection {
+  background: rgba(95, 174, 219, 0.28);
+}
+
+.brand-gradient {
+  background: linear-gradient(135deg, var(--sky), var(--violet));
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, var(--sky), var(--violet), var(--aubergine));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.glass {
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 24px 70px rgba(75, 50, 139, 0.12);
+  backdrop-filter: blur(18px);
+}
+
+.container-shell {
+  width: min(1760px, calc(100% - 64px));
+  margin-inline: auto;
+}
+
+.focus-ring:focus-visible {
+  outline: 3px solid rgba(95, 174, 219, 0.55);
+  outline-offset: 3px;
+}
+
+.subtle-grid {
+  background-image:
+    linear-gradient(rgba(75, 50, 139, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(75, 50, 139, 0.045) 1px, transparent 1px);
+  background-size: 42px 42px;
+}
+
+.hide-scrollbar {
+  scrollbar-width: none;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
