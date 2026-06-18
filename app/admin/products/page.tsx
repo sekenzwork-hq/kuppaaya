@@ -665,10 +665,10 @@ export default function AdminProductsPage() {
               <span className="text-xs font-semibold text-[#21183d]">items selected</span>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button onClick={() => handleBulkStatusChange("active")} variant="secondary" className="min-h-9 px-3 text-[11px] h-9">
+              <Button onClick={() => handleBulkStatusChange(true)} variant="secondary" className="min-h-9 px-3 text-[11px] h-9">
                 Make Active
               </Button>
-              <Button onClick={() => handleBulkStatusChange("draft")} variant="secondary" className="min-h-9 px-3 text-[11px] h-9">
+              <Button onClick={() => handleBulkStatusChange(false)} variant="secondary" className="min-h-9 px-3 text-[11px] h-9">
                 Make Draft
               </Button>
               <Button onClick={() => handleBulkFeaturedToggle(true)} variant="secondary" className="min-h-9 px-3 text-[11px] h-9">
