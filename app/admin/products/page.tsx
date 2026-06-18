@@ -29,26 +29,26 @@ import {
   MinusCircle
 } from "lucide-react";
 
-type Category = { id: string; name: string };
-type Subcategory = { id: string; name: string; category_id: string };
+type Category = { id: string | number; name: string };
+type Subcategory = { id: string | number; name: string; category_id: string | number };
 
 type ProductImage = {
-  id?: string;
-  product_id?: string;
+  id?: string | number;
+  product_id?: string | number;
   image_url: string;
   sort_order: number;
 };
 
 type ProductVariant = {
-  id?: string;
-  product_id?: string;
+  id?: string | number;
+  product_id?: string | number;
   size: string;
   color: string;
   stock_quantity: number;
 };
 
 type ProductState = {
-  id?: string;
+  id?: string | number;
   name: string;
   slug: string;
   description: string;
@@ -57,8 +57,8 @@ type ProductState = {
   stock_quantity: number;
   is_active: boolean;
   featured: boolean;
-  category_id: string;
-  subcategory_id?: string | null;
+  category_id: string | number;
+  subcategory_id?: string | number | null;
   product_images?: ProductImage[];
   product_variants?: ProductVariant[];
   category?: Category;
@@ -88,7 +88,7 @@ export default function AdminProductsPage() {
   const itemsPerPage = 10;
 
   // Selection for bulk actions
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]);
   
   // Form modal states
   const [formOpen, setFormOpen] = useState(false);
@@ -115,7 +115,7 @@ export default function AdminProductsPage() {
   const [notification, setNotification] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   // Delete Confirmation State
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | number | null>(null);
   const [deleteConfirmType, setDeleteConfirmType] = useState<"single" | "bulk">("single");
 
   // Reset page when filters change
@@ -267,7 +267,7 @@ export default function AdminProductsPage() {
 
     try {
       setSaving(true);
-      const productId = editingProduct?.id || Math.random().toString(36).substring(2, 9);
+      const productId = editingProduct?.id;
       const cleanSubcategoryId = formData.subcategory_id || null;
 
       const productPayload = {
@@ -283,26 +283,30 @@ export default function AdminProductsPage() {
       };
 
       const supabase = createClient();
+      let savedProductId = productId;
 
       // 1. Save product
       if (editingProduct) {
         const { error } = await supabase
           .from("products")
           .update(productPayload)
-          .eq("id", productId);
+          .eq("id", productId!);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("products").insert([
-          { id: productId, ...productPayload }
-        ]);
+        const { data, error } = await supabase
+          .from("products")
+          .insert([productPayload])
+          .select();
         if (error) throw error;
+        if (!data || data.length === 0) throw new Error("Failed to retrieve saved product ID");
+        savedProductId = data[0].id;
       }
 
       // 2. Sync Images
-      await supabase.from("product_images").delete().eq("product_id", productId);
+      await supabase.from("product_images").delete().eq("product_id", savedProductId);
       if (formData.product_images && formData.product_images.length > 0) {
         const imageRows = formData.product_images.map((img, index) => ({
-          product_id: productId,
+          product_id: savedProductId,
           image_url: img.image_url,
           sort_order: index
         }));
@@ -311,10 +315,10 @@ export default function AdminProductsPage() {
       }
 
       // 3. Sync Variants
-      await supabase.from("product_variants").delete().eq("product_id", productId);
+      await supabase.from("product_variants").delete().eq("product_id", savedProductId);
       if (formData.product_variants && formData.product_variants.length > 0) {
         const variantRows = formData.product_variants.map((v) => ({
-          product_id: productId,
+          product_id: savedProductId,
           size: v.size,
           color: v.color,
           stock_quantity: v.stock_quantity
@@ -336,7 +340,7 @@ export default function AdminProductsPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string | number) => {
     try {
       setLoading(true);
       const supabase = createClient();
@@ -416,7 +420,7 @@ export default function AdminProductsPage() {
     }
   };
 
-  const handleSelectOne = (id: string, checked: boolean) => {
+  const handleSelectOne = (id: string | number, checked: boolean) => {
     if (checked) {
       setSelectedIds((prev) => [...prev, id]);
     } else {

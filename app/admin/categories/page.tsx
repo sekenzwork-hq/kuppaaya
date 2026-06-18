@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 
 type CategoryState = {
-  id?: string;
+  id?: string | number;
   name: string;
   slug: string;
   description: string;
@@ -47,7 +47,7 @@ export default function AdminCategoriesPage() {
   });
 
   // Delete Confirmation State
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | number | null>(null);
 
   const itemsPerPage = 8;
 
@@ -128,7 +128,6 @@ export default function AdminCategoriesPage() {
       } else {
         const { error } = await supabase.from("categories").insert([
           {
-            id: formData.slug || Math.random().toString(36).substring(2, 9),
             name: formData.name,
             slug: formData.slug,
             description: formData.description,
@@ -152,7 +151,7 @@ export default function AdminCategoriesPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string | number) => {
     try {
       setLoading(true);
       const supabase = createClient();

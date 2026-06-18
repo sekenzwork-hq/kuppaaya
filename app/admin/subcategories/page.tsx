@@ -16,16 +16,15 @@ import {
 } from "lucide-react";
 
 type SubcategoryState = {
-  id?: string;
-  category_id: string;
+  id?: string | number;
+  category_id: string | number;
   name: string;
   slug: string;
-  is_active: boolean;
   category?: { name: string };
 };
 
 type ParentCategory = {
-  id: string;
+  id: string | number;
   name: string;
 };
 
@@ -45,12 +44,11 @@ export default function AdminSubcategoriesPage() {
   const [formData, setFormData] = useState<SubcategoryState>({
     category_id: "",
     name: "",
-    slug: "",
-    is_active: true
+    slug: ""
   });
 
   // Delete Confirmation State
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | number | null>(null);
 
   const itemsPerPage = 8;
 
@@ -102,8 +100,7 @@ export default function AdminSubcategoriesPage() {
     setFormData({
       category_id: categories[0]?.id || "",
       name: "",
-      slug: "",
-      is_active: true
+      slug: ""
     });
     setFormOpen(true);
   };
@@ -130,19 +127,16 @@ export default function AdminSubcategoriesPage() {
           .update({
             category_id: formData.category_id,
             name: formData.name,
-            slug: formData.slug,
-            is_active: formData.is_active
+            slug: formData.slug
           })
           .eq("id", editingSubcategory.id);
         if (error) throw error;
       } else {
         const { error } = await supabase.from("subcategories").insert([
           {
-            id: formData.slug || Math.random().toString(36).substring(2, 9),
             category_id: formData.category_id,
             name: formData.name,
-            slug: formData.slug,
-            is_active: formData.is_active
+            slug: formData.slug
           }
         ]);
         if (error) throw error;
@@ -161,7 +155,7 @@ export default function AdminSubcategoriesPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string | number) => {
     try {
       setLoading(true);
       const supabase = createClient();
@@ -274,7 +268,6 @@ export default function AdminSubcategoriesPage() {
                     <th className="px-6 py-4">Subcategory Name</th>
                     <th className="px-6 py-4">Slug</th>
                     <th className="px-6 py-4">Parent Category</th>
-                    <th className="px-6 py-4">Status</th>
                     <th className="px-6 py-4 text-right">Actions</th>
                   </tr>
                 </thead>
@@ -296,17 +289,6 @@ export default function AdminSubcategoriesPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-800">
                           {sub.category?.name || "—"}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {sub.is_active ? (
-                            <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200">
-                              Active
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center rounded-full bg-slate-50 px-2 py-1 text-xs font-semibold text-slate-600 border border-slate-200">
-                              Inactive
-                            </span>
-                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-xs font-medium">
                           <div className="flex justify-end gap-2">
@@ -415,18 +397,7 @@ export default function AdminSubcategoriesPage() {
                   />
                 </label>
 
-                <div className="flex items-center gap-2 mt-2">
-                  <input
-                    type="checkbox"
-                    id="is_active"
-                    checked={formData.is_active}
-                    onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                    className="h-5 w-5 accent-[#6e63b8] rounded"
-                  />
-                  <label htmlFor="is_active" className="text-xs font-semibold text-[#4b328b] cursor-pointer">
-                    Active (visible in product forms and filters)
-                  </label>
-                </div>
+
 
                 <div className="flex justify-end gap-3 mt-4 border-t border-[#4b328b]/5 pt-4">
                   <Button variant="ghost" type="button" onClick={() => setFormOpen(false)} className="min-h-10 text-xs">

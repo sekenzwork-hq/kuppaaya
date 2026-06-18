@@ -36,7 +36,7 @@ export function CrudManager({ table, fields }: { table: string; fields: Field[] 
     }
   }
 
-  async function deleteRow(id: string) {
+  async function deleteRow(id: string | number) {
     try {
       const { error } = await supabase.from(table).delete().eq("id", id);
       setStatus(error ? error.message : "Deleted");
@@ -104,7 +104,7 @@ export function CrudManager({ table, fields }: { table: string; fields: Field[] 
             </div>
             <div className="mt-4 flex gap-3">
               <Button type="button" onClick={() => updateRow(row)}><Save size={17} />Save</Button>
-              <Button type="button" variant="secondary" onClick={() => deleteRow(String(row.id))}><Trash2 size={17} />Delete</Button>
+              <Button type="button" variant="secondary" onClick={() => deleteRow(row.id as string | number)}><Trash2 size={17} />Delete</Button>
             </div>
           </article>
         ))}
