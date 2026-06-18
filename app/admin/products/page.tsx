@@ -185,7 +185,7 @@ export default function AdminProductsPage() {
 
   // Dependent subcategory dropdown filter
   const availableSubcategories = subcategories.filter(
-    (sub) => sub.category_id === formData.category_id
+    (sub) => String(sub.category_id) === String(formData.category_id)
   );
 
   const handleOpenCreate = () => {
@@ -498,8 +498,8 @@ export default function AdminProductsPage() {
       product.slug.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (product.description && product.description.toLowerCase().includes(searchTerm.toLowerCase()));
 
-    const matchesCategory = categoryFilter === "all" || product.category_id === categoryFilter;
-    const matchesSubcategory = subcategoryFilter === "all" || product.subcategory_id === subcategoryFilter;
+    const matchesCategory = categoryFilter === "all" || String(product.category_id) === String(categoryFilter);
+    const matchesSubcategory = subcategoryFilter === "all" || String(product.subcategory_id) === String(subcategoryFilter);
     
     const matchesStatus = isActiveFilter === "all" ||
       (isActiveFilter === "active" && product.is_active === true) ||
@@ -611,7 +611,7 @@ export default function AdminProductsPage() {
             >
               <option value="all">All Subcategories</option>
               {subcategories
-                .filter((sub) => sub.category_id === categoryFilter)
+                .filter((sub) => String(sub.category_id) === String(categoryFilter))
                 .map((sub) => (
                   <option key={sub.id} value={sub.id}>
                     {sub.name}

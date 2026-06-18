@@ -33,7 +33,7 @@ export function ShopClient({ products }: { products: Product[] }) {
   const filtered = useMemo(() => {
     const rows = products
       .filter((product) => product.name.toLowerCase().includes(query.toLowerCase()))
-      .filter((product) => category === "all" || product.category_id === category)
+      .filter((product) => category === "all" || String(product.category_id) === String(category))
       .filter((product) => product.price <= maxPrice);
 
     if (sort === "price-asc") rows.sort((a, b) => a.price - b.price);

@@ -177,7 +177,7 @@ export default function AdminSubcategoriesPage() {
       sub.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       sub.slug.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesCategory = categoryFilter === "all" || sub.category_id === categoryFilter;
+    const matchesCategory = categoryFilter === "all" || String(sub.category_id) === String(categoryFilter);
 
     return matchesSearch && matchesCategory;
   });

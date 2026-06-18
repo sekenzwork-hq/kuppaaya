@@ -13,19 +13,15 @@ import {
   CheckCircle2,
   AlertCircle,
   X,
-  ArrowUp,
-  ArrowDown,
   Image as ImageIcon
 } from "lucide-react";
 
 type BannerState = {
-  id?: string;
+  id?: string | number;
   title: string;
-  subtitle: string;
   image_url: string;
   link_url: string;
   is_active: boolean;
-  sort_order: number;
 };
 
 export default function AdminBannersPage() {
@@ -39,15 +35,13 @@ export default function AdminBannersPage() {
   const [editingBanner, setEditingBanner] = useState<BannerState | null>(null);
   const [formData, setFormData] = useState<BannerState>({
     title: "",
-    subtitle: "",
     image_url: "",
     link_url: "",
-    is_active: true,
-    sort_order: 0
+    is_active: true
   });
 
   // Delete Confirmation State
-  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | number | null>(null);
 
   useEffect(() => {
     if (notification) {
@@ -63,7 +57,7 @@ export default function AdminBannersPage() {
       const { data, error } = await supabase
         .from("banners")
         .select("*")
-        .order("sort_order", { ascending: true });
+        .order("created_at", { ascending: true });
       if (error) throw error;
       setBanners(data || []);
     } catch (err: any) {
@@ -81,11 +75,9 @@ export default function AdminBannersPage() {
     setEditingBanner(null);
     setFormData({
       title: "",
-      subtitle: "",
       image_url: "",
       link_url: "",
-      is_active: true,
-      sort_order: banners.length > 0 ? Math.max(...banners.map((b) => b.sort_order || 0)) + 1 : 0
+      is_active: true
     });
     setFormOpen(true);
   };
@@ -111,11 +103,9 @@ export default function AdminBannersPage() {
           .from("banners")
           .update({
             title: formData.title,
-            subtitle: formData.subtitle,
             image_url: formData.image_url,
             link_url: formData.link_url,
-            is_active: formData.is_active,
-            sort_order: formData.sort_order
+            is_active: formData.is_active
           })
           .eq("id", editingBanner.id);
         if (error) throw error;
@@ -123,11 +113,9 @@ export default function AdminBannersPage() {
         const { error } = await supabase.from("banners").insert([
           {
             title: formData.title,
-            subtitle: formData.subtitle,
             image_url: formData.image_url,
             link_url: formData.link_url,
-            is_active: formData.is_active,
-            sort_order: formData.sort_order
+            is_active: formData.is_active
           }
         ]);
         if (error) throw error;
@@ -146,7 +134,7 @@ export default function AdminBannersPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: string | number) => {
     try {
       setLoading(true);
       const supabase = createClient();
@@ -180,41 +168,6 @@ export default function AdminBannersPage() {
     } catch (err: any) {
       setNotification({ type: "error", message: "Failed to update banner status" });
       loadBanners(); // Revert
-    }
-  };
-
-  const handleReorder = async (index: number, direction: "up" | "down") => {
-    const targetIndex = direction === "up" ? index - 1 : index + 1;
-    if (targetIndex < 0 || targetIndex >= banners.length) return;
-
-    try {
-      const reorderedList = [...banners];
-      // Swap elements
-      const temp = reorderedList[index];
-      reorderedList[index] = reorderedList[targetIndex];
-      reorderedList[targetIndex] = temp;
-
-      // Update sort_order indexes
-      const updatedList = reorderedList.map((item, idx) => ({
-        ...item,
-        sort_order: idx
-      }));
-
-      // Optimistic state
-      setBanners(updatedList);
-
-      // Save to server
-      const supabase = createClient();
-      for (const item of updatedList) {
-        await supabase
-          .from("banners")
-          .update({ sort_order: item.sort_order })
-          .eq("id", item.id);
-      }
-      setNotification({ type: "success", message: "Banner order saved" });
-    } catch (err) {
-      setNotification({ type: "error", message: "Failed to reorder banners" });
-      loadBanners();
     }
   };
 
@@ -281,30 +234,11 @@ export default function AdminBannersPage() {
                   {/* Banner Text Detail */}
                   <div className="flex-1 min-w-0 text-center md:text-left">
                     <h3 className="text-base font-bold text-[#21183d] truncate">{banner.title || "Untitled Banner"}</h3>
-                    <p className="text-xs text-[#6b6680] mt-1 line-clamp-2">{banner.subtitle || "No subtitle"}</p>
                     {banner.link_url && (
                       <span className="inline-block mt-2 font-mono text-[10px] text-[#6e63b8] bg-[#6e63b8]/5 px-2 py-0.5 rounded">
                         Link: {banner.link_url}
                       </span>
                     )}
-                  </div>
-
-                  {/* Order & Reordering Actions */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      disabled={index === 0}
-                      onClick={() => handleReorder(index, "up")}
-                      className="rounded-lg p-2 border border-[#4b328b]/10 bg-white hover:bg-slate-50 disabled:opacity-30 disabled:hover:bg-white transition"
-                    >
-                      <ArrowUp size={14} />
-                    </button>
-                    <button
-                      disabled={index === banners.length - 1}
-                      onClick={() => handleReorder(index, "down")}
-                      className="rounded-lg p-2 border border-[#4b328b]/10 bg-white hover:bg-slate-50 disabled:opacity-30 disabled:hover:bg-white transition"
-                    >
-                      <ArrowDown size={14} />
-                    </button>
                   </div>
 
                   {/* Status Toggle */}
@@ -368,15 +302,7 @@ export default function AdminBannersPage() {
                   />
                 </label>
 
-                <label className="flex flex-col gap-1 text-xs font-bold uppercase tracking-[0.08em] text-[#4b328b]">
-                  Banner Subtitle
-                  <input
-                    type="text"
-                    value={formData.subtitle}
-                    onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
-                    className="focus-ring h-10 rounded-xl border border-[#4b328b]/10 px-3 text-sm font-normal normal-case tracking-normal text-[#21183d]"
-                  />
-                </label>
+
 
                 <label className="flex flex-col gap-1 text-xs font-bold uppercase tracking-[0.08em] text-[#4b328b]">
                   Button URL / Link Target
