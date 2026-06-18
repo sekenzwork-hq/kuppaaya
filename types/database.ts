@@ -41,12 +41,13 @@ export type Product = {
   description: string;
   price: number;
   compare_at_price?: number | null;
-  stock: number;
-  status: "draft" | "active" | "archived";
-  is_featured: boolean;
+  stock_quantity: number;
+  is_active: boolean;
+  featured: boolean;
   is_new?: boolean;
   is_best_seller?: boolean;
   created_at?: string;
+  updated_at?: string;
   category?: Category;
   subcategory?: Subcategory;
   product_images?: ProductImage[];

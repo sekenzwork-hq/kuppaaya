@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import Image from "next/image";
 import { ArrowRight, Sparkles, Shield, Heart, Compass } from "lucide-react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
@@ -8,6 +8,21 @@ import { ButtonLink } from "@/components/ui/button";
 
 export function HeroSection() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number; opacity: number; scale: number; duration: number; delay: number }>>([]);
+
+  // Initialize particles only on client to avoid hydration mismatch
+  useEffect(() => {
+    const particleArray = [...Array(12)].map((_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      opacity: 0.1 + Math.random() * 0.4,
+      scale: 0.4 + Math.random() * 0.8,
+      duration: 12 + Math.random() * 8,
+      delay: Math.random() * 5
+    }));
+    setParticles(particleArray);
+  }, []);
 
   // Motion values for elegant mouse-based parallax (accelerated on GPU)
   const mouseX = useMotionValue(0);
@@ -115,14 +130,14 @@ y: 0
         />
 
         {/* Floating Light Particles */}
-        {[...Array(12)].map((_, i) => (
+        {particles.map((particle) => (
           <motion.div
-            key={i}
+            key={particle.id}
             initial={{
-              x: typeof window !== "undefined" ? Math.random() * window.innerWidth : 500,
-              y: typeof window !== "undefined" ? Math.random() * window.innerHeight : 400,
-              opacity: 0.1 + Math.random() * 0.4,
-              scale: 0.4 + Math.random() * 0.8
+              x: `${particle.x}%`,
+              y: `${particle.y}%`,
+              opacity: particle.opacity,
+              scale: particle.scale
             }}
             animate={{
               y: ["0px", "-120px", "0px"],
@@ -130,10 +145,10 @@ y: 0
               opacity: [0.15, 0.5, 0.15]
             }}
             transition={{
-              duration: 12 + Math.random() * 8,
+              duration: particle.duration,
               repeat: Infinity,
               ease: "easeInOut",
-              delay: Math.random() * 5
+              delay: particle.delay
             }}
             className="absolute w-4 h-4 rounded-full bg-white blur-[2px] shadow-glow"
           />

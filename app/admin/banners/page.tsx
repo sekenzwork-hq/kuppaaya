@@ -49,8 +49,6 @@ export default function AdminBannersPage() {
   // Delete Confirmation State
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-  const hasSupabase = typeof window !== "undefined" && !!process.env.NEXT_PUBLIC_SUPABASE_URL;
-
   useEffect(() => {
     if (notification) {
       const timer = setTimeout(() => setNotification(null), 4000);
@@ -61,21 +59,13 @@ export default function AdminBannersPage() {
   async function loadBanners() {
     try {
       setLoading(true);
-      if (!hasSupabase) {
-        const res = await fetch("/api/admin/db?table=banners");
-        const json = await res.json();
-        // Sort by sort_order
-        const sorted = (json.data || []).sort((a: any, b: any) => a.sort_order - b.sort_order);
-        setBanners(sorted);
-      } else {
-        const supabase = createClient();
-        const { data, error } = await supabase
-          .from("banners")
-          .select("*")
-          .order("sort_order", { ascending: true });
-        if (error) throw error;
-        setBanners(data || []);
-      }
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("banners")
+        .select("*")
+        .order("sort_order", { ascending: true });
+      if (error) throw error;
+      setBanners(data || []);
     } catch (err: any) {
       setNotification({ type: "error", message: err.message || "Failed to load banners" });
     } finally {
@@ -115,47 +105,32 @@ export default function AdminBannersPage() {
 
     try {
       setSaving(true);
-      if (!hasSupabase) {
-        const method = editingBanner ? "PUT" : "POST";
-        const bodyPayload = editingBanner
-          ? { ...formData, id: editingBanner.id }
-          : { ...formData, id: Math.random().toString(36).substring(2, 9) };
-
-        const res = await fetch(`/api/admin/db?table=banners`, {
-          method,
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(bodyPayload)
-        });
-        const json = await res.json();
-        if (json.error) throw new Error(json.error);
+      const supabase = createClient();
+      if (editingBanner) {
+        const { error } = await supabase
+          .from("banners")
+          .update({
+            title: formData.title,
+            subtitle: formData.subtitle,
+            image_url: formData.image_url,
+            link_url: formData.link_url,
+            is_active: formData.is_active,
+            sort_order: formData.sort_order
+          })
+          .eq("id", editingBanner.id);
+        if (error) throw error;
       } else {
-        const supabase = createClient();
-        if (editingBanner) {
-          const { error } = await supabase
-            .from("banners")
-            .update({
-              title: formData.title,
-              subtitle: formData.subtitle,
-              image_url: formData.image_url,
-              link_url: formData.link_url,
-              is_active: formData.is_active,
-              sort_order: formData.sort_order
-            })
-            .eq("id", editingBanner.id);
-          if (error) throw error;
-        } else {
-          const { error } = await supabase.from("banners").insert([
-            {
-              title: formData.title,
-              subtitle: formData.subtitle,
-              image_url: formData.image_url,
-              link_url: formData.link_url,
-              is_active: formData.is_active,
-              sort_order: formData.sort_order
-            }
-          ]);
-          if (error) throw error;
-        }
+        const { error } = await supabase.from("banners").insert([
+          {
+            title: formData.title,
+            subtitle: formData.subtitle,
+            image_url: formData.image_url,
+            link_url: formData.link_url,
+            is_active: formData.is_active,
+            sort_order: formData.sort_order
+          }
+        ]);
+        if (error) throw error;
       }
 
       setNotification({
@@ -174,17 +149,9 @@ export default function AdminBannersPage() {
   const handleDelete = async (id: string) => {
     try {
       setLoading(true);
-      if (!hasSupabase) {
-        const res = await fetch(`/api/admin/db?table=banners&id=${id}`, {
-          method: "DELETE"
-        });
-        const json = await res.json();
-        if (json.error) throw new Error(json.error);
-      } else {
-        const supabase = createClient();
-        const { error } = await supabase.from("banners").delete().eq("id", id);
-        if (error) throw error;
-      }
+      const supabase = createClient();
+      const { error } = await supabase.from("banners").delete().eq("id", id);
+      if (error) throw error;
       setNotification({ type: "success", message: "Banner deleted successfully" });
       setDeleteConfirmId(null);
       await loadBanners();
@@ -204,19 +171,11 @@ export default function AdminBannersPage() {
         prev.map((b) => (b.id === banner.id ? { ...b, is_active: !b.is_active } : b))
       );
 
-      if (!hasSupabase) {
-        await fetch(`/api/admin/db?table=banners`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updatedBanner)
-        });
-      } else {
-        const supabase = createClient();
-        await supabase
-          .from("banners")
-          .update({ is_active: updatedBanner.is_active })
-          .eq("id", banner.id);
-      }
+      const supabase = createClient();
+      await supabase
+        .from("banners")
+        .update({ is_active: updatedBanner.is_active })
+        .eq("id", banner.id);
       setNotification({ type: "success", message: "Banner status updated" });
     } catch (err: any) {
       setNotification({ type: "error", message: "Failed to update banner status" });
@@ -245,20 +204,12 @@ export default function AdminBannersPage() {
       setBanners(updatedList);
 
       // Save to server
+      const supabase = createClient();
       for (const item of updatedList) {
-        if (!hasSupabase) {
-          await fetch(`/api/admin/db?table=banners`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(item)
-          });
-        } else {
-          const supabase = createClient();
-          await supabase
-            .from("banners")
-            .update({ sort_order: item.sort_order })
-            .eq("id", item.id);
-        }
+        await supabase
+          .from("banners")
+          .update({ sort_order: item.sort_order })
+          .eq("id", item.id);
       }
       setNotification({ type: "success", message: "Banner order saved" });
     } catch (err) {

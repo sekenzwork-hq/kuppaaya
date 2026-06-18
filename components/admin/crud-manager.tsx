@@ -8,107 +8,53 @@ import { createClient } from "@/lib/supabase/client";
 type Field = { name: string; label: string; type?: "text" | "number" | "boolean" | "textarea" };
 
 export function CrudManager({ table, fields }: { table: string; fields: Field[] }) {
-  const hasSupabase = typeof window !== "undefined" && !!process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabase = hasSupabase ? createClient() : null;
+  const supabase = createClient();
   const [rows, setRows] = useState<Record<string, string | number | boolean | null>[]>([]);
   const [draft, setDraft] = useState<Record<string, string | number | boolean>>({});
   const [status, setStatus] = useState("Ready");
 
   async function loadRows() {
-    if (!hasSupabase) {
-      try {
-        const res = await fetch(`/api/admin/db?table=${table}`);
-        const json = await res.json();
-        if (json.error) {
-          setStatus(json.error);
-        } else {
-          setStatus("Loaded (Local DB)");
-          setRows(json.data ?? []);
-        }
-      } catch (err: any) {
-        setStatus(err.message || "Failed to load rows");
-      }
-      return;
+    try {
+      const { data, error } = await supabase.from(table).select("*").order("created_at", { ascending: false });
+      setStatus(error ? error.message : "Loaded");
+      setRows(data ?? []);
+    } catch (err: any) {
+      setStatus(err.message || "Failed to load rows");
     }
-    const { data, error } = await supabase!.from(table).select("*").order("created_at", { ascending: false });
-    setStatus(error ? error.message : "Loaded");
-    setRows(data ?? []);
   }
 
   async function createRow() {
-    if (!hasSupabase) {
-      try {
-        const res = await fetch(`/api/admin/db?table=${table}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(draft)
-        });
-        const json = await res.json();
-        if (json.error) {
-          setStatus(json.error);
-        } else {
-          setStatus("Created (Local DB)");
-          setDraft({});
-          await loadRows();
-        }
-      } catch (err: any) {
-        setStatus(err.message || "Failed to create row");
+    try {
+      const { error } = await supabase.from(table).insert(draft);
+      setStatus(error ? error.message : "Created");
+      if (!error) {
+        setDraft({});
+        await loadRows();
       }
-      return;
+    } catch (err: any) {
+      setStatus(err.message || "Failed to create row");
     }
-    const { error } = await supabase!.from(table).insert(draft);
-    setStatus(error ? error.message : "Created");
-    setDraft({});
-    await loadRows();
   }
 
   async function deleteRow(id: string) {
-    if (!hasSupabase) {
-      try {
-        const res = await fetch(`/api/admin/db?table=${table}&id=${id}`, {
-          method: "DELETE"
-        });
-        const json = await res.json();
-        if (json.error) {
-          setStatus(json.error);
-        } else {
-          setStatus("Deleted (Local DB)");
-          await loadRows();
-        }
-      } catch (err: any) {
-        setStatus(err.message || "Failed to delete row");
-      }
-      return;
+    try {
+      const { error } = await supabase.from(table).delete().eq("id", id);
+      setStatus(error ? error.message : "Deleted");
+      if (!error) await loadRows();
+    } catch (err: any) {
+      setStatus(err.message || "Failed to delete row");
     }
-    const { error } = await supabase!.from(table).delete().eq("id", id);
-    setStatus(error ? error.message : "Deleted");
-    await loadRows();
   }
 
   async function updateRow(row: Record<string, string | number | boolean | null>) {
-    if (!hasSupabase) {
-      try {
-        const res = await fetch(`/api/admin/db?table=${table}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(row)
-        });
-        const json = await res.json();
-        if (json.error) {
-          setStatus(json.error);
-        } else {
-          setStatus("Saved (Local DB)");
-          await loadRows();
-        }
-      } catch (err: any) {
-        setStatus(err.message || "Failed to update row");
-      }
-      return;
+    try {
+      const { id, created_at, ...payload } = row;
+      const { error } = await supabase.from(table).update(payload).eq("id", id);
+      setStatus(error ? error.message : "Saved");
+      if (!error) await loadRows();
+    } catch (err: any) {
+      setStatus(err.message || "Failed to update row");
     }
-    const { id, created_at, ...payload } = row;
-    const { error } = await supabase!.from(table).update(payload).eq("id", id);
-    setStatus(error ? error.message : "Saved");
-    await loadRows();
   }
 
   useEffect(() => {

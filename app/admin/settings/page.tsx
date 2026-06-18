@@ -33,8 +33,6 @@ export default function AdminSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [notification, setNotification] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
-  const hasSupabase = typeof window !== "undefined" && !!process.env.NEXT_PUBLIC_SUPABASE_URL;
-
   // Clear notifications automatically after 4 seconds
   useEffect(() => {
     if (notification) {
@@ -46,40 +44,22 @@ export default function AdminSettingsPage() {
   async function loadSettings() {
     try {
       setLoading(true);
-      if (!hasSupabase) {
-        const res = await fetch("/api/admin/db?table=settings");
-        const json = await res.json();
-        if (json.data && json.data.length > 0) {
-          const s = json.data[0];
-          setSettings({
-            whatsapp_number: s.whatsapp_number || "",
-            contact_email: s.contact_email || "",
-            instagram_url: s.instagram_url || "",
-            facebook_url: s.facebook_url || "",
-            footer_text: s.footer_text || "",
-            brand_description: s.brand_description || "",
-            seo_title: s.seo_title || "",
-            seo_description: s.seo_description || ""
-          });
-        }
-      } else {
-        const supabase = createClient();
-        const { data, error } = await supabase.from("settings").select("*").eq("id", "default").single();
-        if (error && error.code !== "PGRST116") {
-          throw error;
-        }
-        if (data) {
-          setSettings({
-            whatsapp_number: data.whatsapp_number || "",
-            contact_email: data.contact_email || "",
-            instagram_url: data.instagram_url || "",
-            facebook_url: data.facebook_url || "",
-            footer_text: data.footer_text || "",
-            brand_description: data.brand_description || "",
-            seo_title: data.seo_title || "",
-            seo_description: data.seo_description || ""
-          });
-        }
+      const supabase = createClient();
+      const { data, error } = await supabase.from("settings").select("*").eq("id", "default").single();
+      if (error && error.code !== "PGRST116") {
+        throw error;
+      }
+      if (data) {
+        setSettings({
+          whatsapp_number: data.whatsapp_number || "",
+          contact_email: data.contact_email || "",
+          instagram_url: data.instagram_url || "",
+          facebook_url: data.facebook_url || "",
+          footer_text: data.footer_text || "",
+          brand_description: data.brand_description || "",
+          seo_title: data.seo_title || "",
+          seo_description: data.seo_description || ""
+        });
       }
     } catch (err: any) {
       setNotification({ type: "error", message: err.message || "Failed to load settings" });
@@ -94,34 +74,13 @@ export default function AdminSettingsPage() {
       setSaving(true);
       setNotification(null);
 
-      if (!hasSupabase) {
-        // Find existing to get ID or default
-        const resList = await fetch("/api/admin/db?table=settings");
-        const jsonList = await resList.json();
-        const existingId = jsonList.data && jsonList.data[0]?.id ? jsonList.data[0].id : "default";
-
-        const res = await fetch("/api/admin/db?table=settings", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            id: existingId,
-            ...settings
-          })
-        });
-        const json = await res.json();
-        if (json.error) {
-          throw new Error(json.error);
-        }
-      } else {
-        const supabase = createClient();
-        // Upsert standard settings row
-        const { error } = await supabase.from("settings").upsert({
-          id: "default",
-          ...settings,
-          updated_at: new Date().toISOString()
-        });
-        if (error) throw error;
-      }
+      const supabase = createClient();
+      const { error } = await supabase.from("settings").upsert({
+        id: "default",
+        ...settings,
+        updated_at: new Date().toISOString()
+      });
+      if (error) throw error;
       setNotification({ type: "success", message: "Settings saved successfully!" });
     } catch (err: any) {
       setNotification({ type: "error", message: err.message || "Failed to save settings" });

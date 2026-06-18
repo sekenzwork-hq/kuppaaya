@@ -52,7 +52,6 @@ export default function AdminSubcategoriesPage() {
   // Delete Confirmation State
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-  const hasSupabase = typeof window !== "undefined" && !!process.env.NEXT_PUBLIC_SUPABASE_URL;
   const itemsPerPage = 8;
 
   useEffect(() => {
@@ -65,37 +64,17 @@ export default function AdminSubcategoriesPage() {
   async function loadData() {
     try {
       setLoading(true);
-      if (!hasSupabase) {
-        // Load categories
-        const resCat = await fetch("/api/admin/db?table=categories");
-        const jsonCat = await resCat.json();
-        setCategories(jsonCat.data || []);
+      const supabase = createClient();
+      const [catResult, subResult] = await Promise.all([
+        supabase.from("categories").select("id, name").order("name"),
+        supabase.from("subcategories").select("*, category:categories(name)").order("name")
+      ]);
 
-        // Load subcategories
-        const resSub = await fetch("/api/admin/db?table=subcategories");
-        const jsonSub = await resSub.json();
-        
-        // Attach category relation locally
-        const subData = (jsonSub.data || []).map((sub: any) => ({
-          ...sub,
-          category: jsonCat.data?.find((c: any) => String(c.id) === String(sub.category_id))
-        }));
+      if (catResult.error) throw catResult.error;
+      if (subResult.error) throw subResult.error;
 
-        setSubcategories(subData);
-      } else {
-        const supabase = createClient();
-        
-        const [catResult, subResult] = await Promise.all([
-          supabase.from("categories").select("id, name").order("name"),
-          supabase.from("subcategories").select("*, category:categories(name)").order("name")
-        ]);
-
-        if (catResult.error) throw catResult.error;
-        if (subResult.error) throw subResult.error;
-
-        setCategories(catResult.data || []);
-        setSubcategories(subResult.data || []);
-      }
+      setCategories(catResult.data || []);
+      setSubcategories(subResult.data || []);
     } catch (err: any) {
       setNotification({ type: "error", message: err.message || "Failed to load subcategories" });
     } finally {
@@ -144,44 +123,29 @@ export default function AdminSubcategoriesPage() {
 
     try {
       setSaving(true);
-      if (!hasSupabase) {
-        const method = editingSubcategory ? "PUT" : "POST";
-        const bodyPayload = editingSubcategory
-          ? { ...formData, id: editingSubcategory.id }
-          : { ...formData, id: Math.random().toString(36).substring(2, 9) };
-
-        const res = await fetch(`/api/admin/db?table=subcategories`, {
-          method,
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(bodyPayload)
-        });
-        const json = await res.json();
-        if (json.error) throw new Error(json.error);
+      const supabase = createClient();
+      if (editingSubcategory) {
+        const { error } = await supabase
+          .from("subcategories")
+          .update({
+            category_id: formData.category_id,
+            name: formData.name,
+            slug: formData.slug,
+            is_active: formData.is_active
+          })
+          .eq("id", editingSubcategory.id);
+        if (error) throw error;
       } else {
-        const supabase = createClient();
-        if (editingSubcategory) {
-          const { error } = await supabase
-            .from("subcategories")
-            .update({
-              category_id: formData.category_id,
-              name: formData.name,
-              slug: formData.slug,
-              is_active: formData.is_active
-            })
-            .eq("id", editingSubcategory.id);
-          if (error) throw error;
-        } else {
-          const { error } = await supabase.from("subcategories").insert([
-            {
-              id: formData.slug || Math.random().toString(36).substring(2, 9),
-              category_id: formData.category_id,
-              name: formData.name,
-              slug: formData.slug,
-              is_active: formData.is_active
-            }
-          ]);
-          if (error) throw error;
-        }
+        const { error } = await supabase.from("subcategories").insert([
+          {
+            id: formData.slug || Math.random().toString(36).substring(2, 9),
+            category_id: formData.category_id,
+            name: formData.name,
+            slug: formData.slug,
+            is_active: formData.is_active
+          }
+        ]);
+        if (error) throw error;
       }
 
       setNotification({
@@ -200,17 +164,9 @@ export default function AdminSubcategoriesPage() {
   const handleDelete = async (id: string) => {
     try {
       setLoading(true);
-      if (!hasSupabase) {
-        const res = await fetch(`/api/admin/db?table=subcategories&id=${id}`, {
-          method: "DELETE"
-        });
-        const json = await res.json();
-        if (json.error) throw new Error(json.error);
-      } else {
-        const supabase = createClient();
-        const { error } = await supabase.from("subcategories").delete().eq("id", id);
-        if (error) throw error;
-      }
+      const supabase = createClient();
+      const { error } = await supabase.from("subcategories").delete().eq("id", id);
+      if (error) throw error;
       setNotification({ type: "success", message: "Subcategory deleted successfully" });
       setDeleteConfirmId(null);
       await loadData();

@@ -49,7 +49,6 @@ export default function AdminCategoriesPage() {
   // Delete Confirmation State
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
-  const hasSupabase = typeof window !== "undefined" && !!process.env.NEXT_PUBLIC_SUPABASE_URL;
   const itemsPerPage = 8;
 
   useEffect(() => {
@@ -62,19 +61,13 @@ export default function AdminCategoriesPage() {
   async function loadCategories() {
     try {
       setLoading(true);
-      if (!hasSupabase) {
-        const res = await fetch("/api/admin/db?table=categories");
-        const json = await res.json();
-        setCategories(json.data || []);
-      } else {
-        const supabase = createClient();
-        const { data, error } = await supabase
-          .from("categories")
-          .select("*")
-          .order("created_at", { ascending: false });
-        if (error) throw error;
-        setCategories(data || []);
-      }
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      setCategories(data || []);
     } catch (err: any) {
       setNotification({ type: "error", message: err.message || "Failed to load categories" });
     } finally {
@@ -119,46 +112,31 @@ export default function AdminCategoriesPage() {
     e.preventDefault();
     try {
       setSaving(true);
-      if (!hasSupabase) {
-        const method = editingCategory ? "PUT" : "POST";
-        const bodyPayload = editingCategory
-          ? { ...formData, id: editingCategory.id }
-          : { ...formData, id: Math.random().toString(36).substring(2, 9) };
-
-        const res = await fetch(`/api/admin/db?table=categories`, {
-          method,
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(bodyPayload)
-        });
-        const json = await res.json();
-        if (json.error) throw new Error(json.error);
+      const supabase = createClient();
+      if (editingCategory) {
+        const { error } = await supabase
+          .from("categories")
+          .update({
+            name: formData.name,
+            slug: formData.slug,
+            description: formData.description,
+            image_url: formData.image_url,
+            is_active: formData.is_active
+          })
+          .eq("id", editingCategory.id);
+        if (error) throw error;
       } else {
-        const supabase = createClient();
-        if (editingCategory) {
-          const { error } = await supabase
-            .from("categories")
-            .update({
-              name: formData.name,
-              slug: formData.slug,
-              description: formData.description,
-              image_url: formData.image_url,
-              is_active: formData.is_active
-            })
-            .eq("id", editingCategory.id);
-          if (error) throw error;
-        } else {
-          const { error } = await supabase.from("categories").insert([
-            {
-              id: formData.slug || Math.random().toString(36).substring(2, 9),
-              name: formData.name,
-              slug: formData.slug,
-              description: formData.description,
-              image_url: formData.image_url,
-              is_active: formData.is_active
-            }
-          ]);
-          if (error) throw error;
-        }
+        const { error } = await supabase.from("categories").insert([
+          {
+            id: formData.slug || Math.random().toString(36).substring(2, 9),
+            name: formData.name,
+            slug: formData.slug,
+            description: formData.description,
+            image_url: formData.image_url,
+            is_active: formData.is_active
+          }
+        ]);
+        if (error) throw error;
       }
 
       setNotification({
@@ -177,17 +155,9 @@ export default function AdminCategoriesPage() {
   const handleDelete = async (id: string) => {
     try {
       setLoading(true);
-      if (!hasSupabase) {
-        const res = await fetch(`/api/admin/db?table=categories&id=${id}`, {
-          method: "DELETE"
-        });
-        const json = await res.json();
-        if (json.error) throw new Error(json.error);
-      } else {
-        const supabase = createClient();
-        const { error } = await supabase.from("categories").delete().eq("id", id);
-        if (error) throw error;
-      }
+      const supabase = createClient();
+      const { error } = await supabase.from("categories").delete().eq("id", id);
+      if (error) throw error;
       setNotification({ type: "success", message: "Category deleted successfully" });
       setDeleteConfirmId(null);
       await loadCategories();

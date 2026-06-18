@@ -86,12 +86,17 @@ images: ["/images/logo.png"],
 };
 
 export default function RootLayout({
-children,
+  children,
 }: {
-children: React.ReactNode;
+  children: React.ReactNode;
 }) {
-return (
-<html lang="en" className={`${inter.variable} ${playfair.variable}`}> <body> <SiteHeader />
-{children} <SiteFooter /> </body> </html>
-);
+  return (
+    <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
+      <body>
+        <SiteHeader />
+        {children}
+        <SiteFooter />
+      </body>
+    </html>
+  );
 }

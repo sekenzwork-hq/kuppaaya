@@ -4,11 +4,10 @@ import { useEffect, useMemo, useState } from "react";
 import { Search, SlidersHorizontal } from "lucide-react";
 import { ProductCard } from "@/components/shop/product-card";
 import { Button } from "@/components/ui/button";
-import { categories as fallbackCategories } from "@/lib/sample-data";
 import type { Category, Product } from "@/types/database";
 
 export function ShopClient({ products }: { products: Product[] }) {
-  const [categories, setCategories] = useState<Category[]>(fallbackCategories);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
   const [sort, setSort] = useState("newest");
@@ -19,17 +18,11 @@ export function ShopClient({ products }: { products: Product[] }) {
   useEffect(() => {
     async function loadCategories() {
       try {
-        const hasSupabase = !!process.env.NEXT_PUBLIC_SUPABASE_URL;
-        if (!hasSupabase) {
-          const res = await fetch("/api/admin/db?table=categories");
-          const json = await res.json();
-          if (json.data) setCategories(json.data);
-        } else {
-          const { createClient } = await import("@/lib/supabase/client");
-          const supabase = createClient();
-          const { data } = await supabase.from("categories").select("*");
-          if (data) setCategories(data as Category[]);
-        }
+        const { createClient } = await import("@/lib/supabase/client");
+        const supabase = createClient();
+        const { data, error } = await supabase.from("categories").select("*");
+        if (error) throw error;
+        if (data) setCategories(data as Category[]);
       } catch (e) {
         console.error("Failed to load categories", e);
       }
@@ -45,7 +38,7 @@ export function ShopClient({ products }: { products: Product[] }) {
 
     if (sort === "price-asc") rows.sort((a, b) => a.price - b.price);
     if (sort === "price-desc") rows.sort((a, b) => b.price - a.price);
-    if (sort === "featured") rows.sort((a, b) => Number(b.is_featured) - Number(a.is_featured));
+    if (sort === "featured") rows.sort((a, b) => Number(b.featured) - Number(a.featured));
     return rows;
   }, [products, query, category, sort, maxPrice]);
 

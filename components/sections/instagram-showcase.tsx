@@ -4,10 +4,10 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 
 const images = [
-  "/assets/1.jpeg",
-  "/assets/2.jpeg",
-  "/assets/3.jpeg",
-  "/assets/4.jpeg",
+  "/assets/1.png",
+  "/assets/2.png",
+  "/assets/3.png",
+  "/assets/4.png",
 ];
 
 export function InstagramShowcase() {

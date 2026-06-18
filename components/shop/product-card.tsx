@@ -15,9 +15,11 @@ export function ProductCard({ product }: { product: Product }) {
       <Link href={`/product/${product.slug}`} className="block">
         <div className="relative aspect-[4/5] overflow-hidden rounded-t-[8px] bg-[#f8fafc]">
           <Image src={image} alt={product.name} fill className="object-cover transition duration-700 group-hover:scale-105" sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw" />
-          <div className="absolute left-3 top-3 rounded-full bg-white/86 px-3 py-1 text-xs font-semibold text-[#4b328b] backdrop-blur">
-            {product.is_new ? "New" : product.is_best_seller ? "Best Seller" : "Featured"}
-          </div>
+          {product.is_new || product.is_best_seller || product.featured ? (
+            <div className="absolute left-3 top-3 rounded-full bg-white/86 px-3 py-1 text-xs font-semibold text-[#4b328b] backdrop-blur">
+              {product.is_new ? "New" : product.is_best_seller ? "Best Seller" : "Featured"}
+            </div>
+          ) : null}
           <button className="focus-ring absolute right-3 top-3 rounded-full bg-white/86 p-2 text-[#4b328b] backdrop-blur" aria-label={`Save ${product.name}`}>
             <Heart size={18} />
           </button>

@@ -54,9 +54,9 @@ type ProductState = {
   description: string;
   price: number;
   compare_at_price?: number | null;
-  stock: number;
-  status: "draft" | "active" | "archived";
-  is_featured: boolean;
+  stock_quantity: number;
+  is_active: boolean;
+  featured: boolean;
   category_id: string;
   subcategory_id?: string | null;
   product_images?: ProductImage[];
@@ -81,7 +81,7 @@ export default function AdminProductsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [subcategoryFilter, setSubcategoryFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [isActiveFilter, setIsActiveFilter] = useState("all"); // Changed from statusFilter
   const [featuredFilter, setFeaturedFilter] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
   const [currentPage, setCurrentPage] = useState(1);
@@ -99,9 +99,9 @@ export default function AdminProductsPage() {
     description: "",
     price: 0,
     compare_at_price: null,
-    stock: 0,
-    status: "draft",
-    is_featured: false,
+    stock_quantity: 0,
+    is_active: true,
+    featured: false,
     category_id: "",
     subcategory_id: "",
     product_images: [],
@@ -118,12 +118,10 @@ export default function AdminProductsPage() {
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [deleteConfirmType, setDeleteConfirmType] = useState<"single" | "bulk">("single");
 
-  const hasSupabase = typeof window !== "undefined" && !!process.env.NEXT_PUBLIC_SUPABASE_URL;
-
   // Reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, categoryFilter, subcategoryFilter, statusFilter, featuredFilter, sortBy]);
+  }, [searchTerm, categoryFilter, subcategoryFilter, isActiveFilter, featuredFilter, sortBy]);
 
   // Handle parameters from other pages (like Dashboard stock warning)
   useEffect(() => {
@@ -147,68 +145,22 @@ export default function AdminProductsPage() {
   async function loadData() {
     try {
       setLoading(true);
-      if (!hasSupabase) {
-        // Fetch categories & subcategories
-        const resCat = await fetch("/api/admin/db?table=categories");
-        const jsonCat = await resCat.json();
-        const cats = jsonCat.data || [];
-        setCategories(cats);
+      const supabase = createClient();
 
-        const resSub = await fetch("/api/admin/db?table=subcategories");
-        const jsonSub = await resSub.json();
-        const subcats = jsonSub.data || [];
-        setSubcategories(subcats);
+      // Parallel loads
+      const [catRes, subRes, prodRes] = await Promise.all([
+        supabase.from("categories").select("*").order("name"),
+        supabase.from("subcategories").select("*").order("name"),
+        supabase.from("products").select("*, product_images(*), product_variants(*), category:categories(*), subcategory:subcategories(*)").order("created_at", { ascending: false })
+      ]);
 
-        // Fetch products
-        const resProd = await fetch("/api/admin/db?table=products");
-        const jsonProd = await resProd.json();
-        const prods = jsonProd.data || [];
+      if (catRes.error) throw catRes.error;
+      if (subRes.error) throw subRes.error;
+      if (prodRes.error) throw prodRes.error;
 
-        // Fetch images & variants
-        const resImg = await fetch("/api/admin/db?table=product_images");
-        const jsonImg = await resImg.json();
-        const imgs = jsonImg.data || [];
-
-        const resVar = await fetch("/api/admin/db?table=product_variants");
-        const jsonVar = await resVar.json();
-        const vars = jsonVar.data || [];
-
-        // Map everything locally
-        const mappedProducts = prods.map((p: any) => {
-          const cat = cats.find((c: any) => String(c.id) === String(p.category_id));
-          const sub = subcats.find((s: any) => String(s.id) === String(p.subcategory_id));
-          const pImgs = imgs.filter((img: any) => String(img.product_id) === String(p.id))
-            .sort((a: any, b: any) => a.sort_order - b.sort_order);
-          const pVars = vars.filter((v: any) => String(v.product_id) === String(p.id));
-          
-          return {
-            ...p,
-            category: cat,
-            subcategory: sub,
-            product_images: pImgs,
-            product_variants: pVars
-          };
-        });
-
-        setProducts(mappedProducts);
-      } else {
-        const supabase = createClient();
-
-        // Parallel loads
-        const [catRes, subRes, prodRes] = await Promise.all([
-          supabase.from("categories").select("*").order("name"),
-          supabase.from("subcategories").select("*").order("name"),
-          supabase.from("products").select("*, product_images(*), product_variants(*), category:categories(*), subcategory:subcategories(*)").order("created_at", { ascending: false })
-        ]);
-
-        if (catRes.error) throw catRes.error;
-        if (subRes.error) throw subRes.error;
-        if (prodRes.error) throw prodRes.error;
-
-        setCategories(catRes.data || []);
-        setSubcategories(subRes.data || []);
-        setProducts((prodRes.data || []) as ProductState[]);
-      }
+      setCategories(catRes.data || []);
+      setSubcategories(subRes.data || []);
+      setProducts((prodRes.data || []) as ProductState[]);
     } catch (err: any) {
       setNotification({ type: "error", message: err.message || "Failed to load data" });
     } finally {
@@ -244,9 +196,9 @@ export default function AdminProductsPage() {
       description: "",
       price: 0,
       compare_at_price: null,
-      stock: 0,
-      status: "draft",
-      is_featured: false,
+      stock_quantity: 0,
+      is_active: true,
+      featured: false,
       category_id: categories[0]?.id || "",
       subcategory_id: "",
       product_images: [],
@@ -292,7 +244,7 @@ export default function AdminProductsPage() {
       ...prev,
       product_variants: [...(prev.product_variants || []), newVariant],
       // Recalculate total product stock automatically based on variants
-      stock: (prev.product_variants || []).reduce((acc, curr) => acc + curr.stock_quantity, 0) + newVariant.stock_quantity
+      stock_quantity: (prev.product_variants || []).reduce((acc, curr) => acc + curr.stock_quantity, 0) + newVariant.stock_quantity
     }));
     setVariantDraft({ size: "", color: "", stock_quantity: 0 });
   };
@@ -302,7 +254,7 @@ export default function AdminProductsPage() {
     setFormData((prev) => ({
       ...prev,
       product_variants: updated,
-      stock: updated.reduce((acc, curr) => acc + curr.stock_quantity, 0)
+      stock_quantity: updated.reduce((acc, curr) => acc + curr.stock_quantity, 0)
     }));
   };
 
@@ -323,116 +275,52 @@ export default function AdminProductsPage() {
         slug: formData.slug,
         description: formData.description,
         price: Number(formData.price),
-        compare_at_price: formData.compare_at_price ? Number(formData.compare_at_price) : null,
-        stock: Number(formData.stock),
-        status: formData.status,
-        is_featured: formData.is_featured,
+        stock_quantity: Number(formData.stock_quantity),
+        is_active: formData.is_active,
+        featured: formData.featured,
         category_id: formData.category_id,
         subcategory_id: cleanSubcategoryId
       };
 
-      if (!hasSupabase) {
-        // 1. Create or update the product row
-        const method = editingProduct ? "PUT" : "POST";
-        const bodyPayload = { ...productPayload, id: productId };
-        const res = await fetch(`/api/admin/db?table=products`, {
-          method,
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(bodyPayload)
-        });
-        const json = await res.json();
-        if (json.error) throw new Error(json.error);
+      const supabase = createClient();
 
-        // 2. Sync Images locally
-        // Fetch existing images first
-        const resImg = await fetch("/api/admin/db?table=product_images");
-        const jsonImg = await resImg.json();
-        const currentImgs = jsonImg.data || [];
-        // Delete all old ones for this product
-        const matchImgs = currentImgs.filter((img: any) => String(img.product_id) === String(productId));
-        for (const img of matchImgs) {
-          await fetch(`/api/admin/db?table=product_images&id=${img.id}`, { method: "DELETE" });
-        }
-        // Insert current list
-        if (formData.product_images) {
-          for (let i = 0; i < formData.product_images.length; i++) {
-            await fetch(`/api/admin/db?table=product_images`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                product_id: productId,
-                image_url: formData.product_images[i].image_url,
-                sort_order: i
-              })
-            });
-          }
-        }
-
-        // 3. Sync Variants locally
-        const resVar = await fetch("/api/admin/db?table=product_variants");
-        const jsonVar = await resVar.json();
-        const currentVars = jsonVar.data || [];
-        const matchVars = currentVars.filter((v: any) => String(v.product_id) === String(productId));
-        for (const v of matchVars) {
-          await fetch(`/api/admin/db?table=product_variants&id=${v.id}`, { method: "DELETE" });
-        }
-        if (formData.product_variants) {
-          for (const variant of formData.product_variants) {
-            await fetch(`/api/admin/db?table=product_variants`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                product_id: productId,
-                size: variant.size,
-                color: variant.color,
-                stock_quantity: variant.stock_quantity
-              })
-            });
-          }
-        }
+      // 1. Save product
+      if (editingProduct) {
+        const { error } = await supabase
+          .from("products")
+          .update(productPayload)
+          .eq("id", productId);
+        if (error) throw error;
       } else {
-        const supabase = createClient();
+        const { error } = await supabase.from("products").insert([
+          { id: productId, ...productPayload }
+        ]);
+        if (error) throw error;
+      }
 
-        // 1. Save product
-        if (editingProduct) {
-          const { error } = await supabase
-            .from("products")
-            .update(productPayload)
-            .eq("id", productId);
-          if (error) throw error;
-        } else {
-          const { error } = await supabase.from("products").insert([
-            { id: productId, ...productPayload }
-          ]);
-          if (error) throw error;
-        }
+      // 2. Sync Images
+      await supabase.from("product_images").delete().eq("product_id", productId);
+      if (formData.product_images && formData.product_images.length > 0) {
+        const imageRows = formData.product_images.map((img, index) => ({
+          product_id: productId,
+          image_url: img.image_url,
+          sort_order: index
+        }));
+        const { error: imgErr } = await supabase.from("product_images").insert(imageRows);
+        if (imgErr) throw imgErr;
+      }
 
-        // 2. Sync Images
-        // Delete previous
-        await supabase.from("product_images").delete().eq("product_id", productId);
-        // Insert new
-        if (formData.product_images && formData.product_images.length > 0) {
-          const imageRows = formData.product_images.map((img, index) => ({
-            product_id: productId,
-            image_url: img.image_url,
-            sort_order: index
-          }));
-          const { error: imgErr } = await supabase.from("product_images").insert(imageRows);
-          if (imgErr) throw imgErr;
-        }
-
-        // 3. Sync Variants
-        await supabase.from("product_variants").delete().eq("product_id", productId);
-        if (formData.product_variants && formData.product_variants.length > 0) {
-          const variantRows = formData.product_variants.map((v) => ({
-            product_id: productId,
-            size: v.size,
-            color: v.color,
-            stock_quantity: v.stock_quantity
-          }));
-          const { error: varErr } = await supabase.from("product_variants").insert(variantRows);
-          if (varErr) throw varErr;
-        }
+      // 3. Sync Variants
+      await supabase.from("product_variants").delete().eq("product_id", productId);
+      if (formData.product_variants && formData.product_variants.length > 0) {
+        const variantRows = formData.product_variants.map((v) => ({
+          product_id: productId,
+          size: v.size,
+          color: v.color,
+          stock_quantity: v.stock_quantity
+        }));
+        const { error: varErr } = await supabase.from("product_variants").insert(variantRows);
+        if (varErr) throw varErr;
       }
 
       setNotification({
@@ -451,45 +339,24 @@ export default function AdminProductsPage() {
   const handleDelete = async (id: string) => {
     try {
       setLoading(true);
-      if (!hasSupabase) {
-        // Delete product
-        await fetch(`/api/admin/db?table=products&id=${id}`, { method: "DELETE" });
+      const supabase = createClient();
 
-        // Delete images from DB
-        const resImg = await fetch("/api/admin/db?table=product_images");
-        const jsonImg = await resImg.json();
-        const imgs = jsonImg.data || [];
-        const matchImgs = imgs.filter((img: any) => String(img.product_id) === String(id));
-        for (const img of matchImgs) {
-          await fetch(`/api/admin/db?table=product_images&id=${img.id}`, { method: "DELETE" });
-        }
-
-        // Delete variants
-        const resVar = await fetch("/api/admin/db?table=product_variants");
-        const jsonVar = await resVar.json();
-        const vars = jsonVar.data || [];
-        const matchVars = vars.filter((v: any) => String(v.product_id) === String(id));
-        for (const v of matchVars) {
-          await fetch(`/api/admin/db?table=product_variants&id=${v.id}`, { method: "DELETE" });
-        }
-      } else {
-        const supabase = createClient();
-        
-        // Storage cleanups (product-images bucket)
-        const { data: pImgs } = await supabase.from("product_images").select("image_url").eq("product_id", id);
-        if (pImgs && pImgs.length > 0) {
-          const filePaths = pImgs.map((img) => {
+      // Storage cleanups (product-images bucket)
+      const { data: pImgs } = await supabase.from("product_images").select("image_url").eq("product_id", id);
+      if (pImgs && pImgs.length > 0) {
+        const filePaths = pImgs
+          .map((img) => {
             const parts = img.image_url.split("/product-images/");
             return parts.length > 1 ? parts[1] : null;
-          }).filter(Boolean) as string[];
-          if (filePaths.length > 0) {
-            await supabase.storage.from("product-images").remove(filePaths);
-          }
+          })
+          .filter(Boolean) as string[];
+        if (filePaths.length > 0) {
+          await supabase.storage.from("product-images").remove(filePaths);
         }
-
-        // DB deletes
-        await supabase.from("products").delete().eq("id", id);
       }
+
+      // DB deletes
+      await supabase.from("products").delete().eq("id", id);
       setNotification({ type: "success", message: "Product deleted successfully" });
       setDeleteConfirmId(null);
       setSelectedIds((prev) => prev.filter((item) => item !== id));
@@ -503,26 +370,18 @@ export default function AdminProductsPage() {
 
   const handleToggleFeatured = async (product: ProductState) => {
     try {
-      const updatedFeatured = !product.is_featured;
+      const updatedFeatured = !product.featured;
       
       // Optimistic state update
       setProducts((prev) =>
-        prev.map((p) => (p.id === product.id ? { ...p, is_featured: updatedFeatured } : p))
+        prev.map((p) => (p.id === product.id ? { ...p, featured: updatedFeatured } : p))
       );
 
-      if (!hasSupabase) {
-        await fetch(`/api/admin/db?table=products`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...product, is_featured: updatedFeatured })
-        });
-      } else {
-        const supabase = createClient();
-        await supabase
-          .from("products")
-          .update({ is_featured: updatedFeatured })
-          .eq("id", product.id);
-      }
+      const supabase = createClient();
+      await supabase
+        .from("products")
+        .update({ featured: updatedFeatured })
+        .eq("id", product.id);
       setNotification({ type: "success", message: "Featured status updated" });
     } catch (err) {
       setNotification({ type: "error", message: "Failed to update featured status" });
@@ -530,26 +389,18 @@ export default function AdminProductsPage() {
     }
   };
 
-  const handleStatusChange = async (product: ProductState, status: "draft" | "active" | "archived") => {
+  const handleStatusChange = async (product: ProductState, isActive: boolean) => {
     try {
       setProducts((prev) =>
-        prev.map((p) => (p.id === product.id ? { ...p, status } : p))
+        prev.map((p) => (p.id === product.id ? { ...p, is_active: isActive } : p))
       );
 
-      if (!hasSupabase) {
-        await fetch(`/api/admin/db?table=products`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...product, status })
-        });
-      } else {
-        const supabase = createClient();
-        await supabase
-          .from("products")
-          .update({ status })
-          .eq("id", product.id);
-      }
-      setNotification({ type: "success", message: `Product status set to ${status}` });
+      const supabase = createClient();
+      await supabase
+        .from("products")
+        .update({ is_active: isActive })
+        .eq("id", product.id);
+      setNotification({ type: "success", message: `Product ${isActive ? "activated" : "deactivated"}` });
     } catch (err) {
       setNotification({ type: "error", message: "Failed to update status" });
       loadData();
@@ -573,27 +424,17 @@ export default function AdminProductsPage() {
     }
   };
 
-  const handleBulkStatusChange = async (status: "draft" | "active" | "archived") => {
+  const handleBulkStatusChange = async (isActive: boolean) => {
     try {
       setLoading(true);
       // Optimistic state
       setProducts((prev) =>
-        prev.map((p) => (selectedIds.includes(p.id!) ? { ...p, status } : p))
+        prev.map((p) => (selectedIds.includes(p.id!) ? { ...p, is_active: isActive } : p))
       );
 
+      const supabase = createClient();
       for (const id of selectedIds) {
-        const prod = products.find((p) => p.id === id);
-        if (!prod) continue;
-        if (!hasSupabase) {
-          await fetch(`/api/admin/db?table=products`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ...prod, status })
-          });
-        } else {
-          const supabase = createClient();
-          await supabase.from("products").update({ status }).eq("id", id);
-        }
+        await supabase.from("products").update({ is_active: isActive }).eq("id", id);
       }
       setNotification({ type: "success", message: `Updated status for ${selectedIds.length} items` });
       setSelectedIds([]);
@@ -608,22 +449,12 @@ export default function AdminProductsPage() {
     try {
       setLoading(true);
       setProducts((prev) =>
-        prev.map((p) => (selectedIds.includes(p.id!) ? { ...p, is_featured: featured } : p))
+        prev.map((p) => (selectedIds.includes(p.id!) ? { ...p, featured: featured } : p))
       );
 
+      const supabase = createClient();
       for (const id of selectedIds) {
-        const prod = products.find((p) => p.id === id);
-        if (!prod) continue;
-        if (!hasSupabase) {
-          await fetch(`/api/admin/db?table=products`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ ...prod, is_featured: featured })
-          });
-        } else {
-          const supabase = createClient();
-          await supabase.from("products").update({ is_featured: featured }).eq("id", id);
-        }
+        await supabase.from("products").update({ featured: featured }).eq("id", id);
       }
       setNotification({ type: "success", message: `Updated featured status for ${selectedIds.length} items` });
       setSelectedIds([]);
@@ -642,13 +473,9 @@ export default function AdminProductsPage() {
   const handleBulkDelete = async () => {
     try {
       setLoading(true);
+      const supabase = createClient();
       for (const id of selectedIds) {
-        if (!hasSupabase) {
-          await fetch(`/api/admin/db?table=products&id=${id}`, { method: "DELETE" });
-        } else {
-          const supabase = createClient();
-          await supabase.from("products").delete().eq("id", id);
-        }
+        await supabase.from("products").delete().eq("id", id);
       }
       setNotification({ type: "success", message: `Deleted ${selectedIds.length} products` });
       setSelectedIds([]);
@@ -670,14 +497,13 @@ export default function AdminProductsPage() {
     const matchesCategory = categoryFilter === "all" || product.category_id === categoryFilter;
     const matchesSubcategory = subcategoryFilter === "all" || product.subcategory_id === subcategoryFilter;
     
-    const matchesStatus = statusFilter === "all" ||
-      (statusFilter === "active" && product.status === "active") ||
-      (statusFilter === "draft" && product.status === "draft") ||
-      (statusFilter === "archived" && product.status === "archived");
+    const matchesStatus = isActiveFilter === "all" ||
+      (isActiveFilter === "active" && product.is_active === true) ||
+      (isActiveFilter === "inactive" && product.is_active === false);
 
     const matchesFeatured = featuredFilter === "all" ||
-      (featuredFilter === "featured" && product.is_featured) ||
-      (featuredFilter === "standard" && !product.is_featured);
+      (featuredFilter === "featured" && product.featured) ||
+      (featuredFilter === "standard" && !product.featured);
 
     return matchesSearch && matchesCategory && matchesSubcategory && matchesStatus && matchesFeatured;
   });
@@ -696,10 +522,10 @@ export default function AdminProductsPage() {
       return b.price - a.price;
     }
     if (sortBy === "stock-asc") {
-      return a.stock - b.stock;
+      return a.stock_quantity - b.stock_quantity;
     }
     if (sortBy === "stock-desc") {
-      return b.stock - a.stock;
+      return b.stock_quantity - a.stock_quantity;
     }
     return 0;
   });
@@ -791,14 +617,13 @@ export default function AdminProductsPage() {
 
             {/* Status Filter */}
             <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              value={isActiveFilter}
+              onChange={(e) => setIsActiveFilter(e.target.value)}
               className="focus-ring h-10 rounded-xl border border-[#4b328b]/10 bg-white px-3 text-sm text-[#21183d]"
             >
               <option value="all">All Statuses</option>
               <option value="active">Active</option>
-              <option value="draft">Draft</option>
-              <option value="archived">Archived</option>
+              <option value="inactive">Inactive</option>
             </select>
           </div>
 
@@ -941,13 +766,13 @@ export default function AdminProductsPage() {
                           ₹{product.price}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          {product.stock <= 5 ? (
+                          {product.stock_quantity <= 5 ? (
                             <span className="inline-flex items-center rounded bg-red-50 px-2 py-0.5 text-xs font-semibold text-red-700 border border-red-200">
-                              {product.stock} (Low)
+                              {product.stock_quantity} (Low)
                             </span>
                           ) : (
                             <span className="text-xs font-medium text-slate-700">
-                              {product.stock}
+                              {product.stock_quantity}
                             </span>
                           )}
                         </td>
@@ -955,29 +780,26 @@ export default function AdminProductsPage() {
                           <button
                             onClick={() => handleToggleFeatured(product)}
                             className={`rounded-full p-1 transition ${
-                              product.is_featured
+                              product.featured
                                 ? "text-amber-500 hover:text-amber-600 scale-110"
                                 : "text-slate-300 hover:text-slate-400"
                             }`}
                           >
-                            <Sparkles size={16} fill={product.is_featured ? "currentColor" : "none"} />
+                            <Sparkles size={16} fill={product.featured ? "currentColor" : "none"} />
                           </button>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <select
-                            value={product.status}
-                            onChange={(e) => handleStatusChange(product, e.target.value as any)}
+                            value={product.is_active ? "active" : "inactive"}
+                            onChange={(e) => handleStatusChange(product, e.target.value === "active")}
                             className={`focus-ring text-[11px] font-bold rounded-lg border px-2 py-1 bg-white cursor-pointer ${
-                              product.status === "active"
+                              product.is_active
                                 ? "text-emerald-700 border-emerald-200 bg-emerald-50/50"
-                                : product.status === "draft"
-                                ? "text-slate-600 border-slate-200"
-                                : "text-red-700 border-red-200 bg-red-50/50"
+                                : "text-slate-600 border-slate-200"
                             }`}
                           >
                             <option value="active">Active</option>
-                            <option value="draft">Draft</option>
-                            <option value="archived">Archived</option>
+                            <option value="inactive">Inactive</option>
                           </select>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-xs font-medium">
@@ -1171,8 +993,8 @@ export default function AdminProductsPage() {
                       type="number"
                       required
                       min={0}
-                      value={formData.stock}
-                      onChange={(e) => setFormData({ ...formData, stock: Number(e.target.value) })}
+                      value={formData.stock_quantity}
+                      onChange={(e) => setFormData({ ...formData, stock_quantity: Number(e.target.value) })}
                       className="focus-ring h-10 rounded-xl border border-[#4b328b]/10 bg-white px-3 text-sm font-normal normal-case tracking-normal text-[#21183d]"
                     />
                   </label>
@@ -1180,18 +1002,23 @@ export default function AdminProductsPage() {
 
                 {/* Status & Featured */}
                 <div className="grid gap-4 md:grid-cols-2 bg-slate-50/50 p-4 rounded-xl border border-[#4b328b]/5">
-                  <label className="flex flex-col gap-1 text-xs font-bold uppercase tracking-[0.08em] text-[#4b328b]">
-                    Visibility Status
-                    <select
-                      value={formData.status}
-                      onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                      className="focus-ring h-10 rounded-xl border border-[#4b328b]/10 bg-white px-3 text-sm text-[#21183d]"
-                    >
-                      <option value="draft">Draft (hidden from store)</option>
-                      <option value="active">Active (available in store)</option>
-                      <option value="archived">Archived (historical record)</option>
-                    </select>
-                  </label>
+                  <div className="flex flex-col justify-center gap-1">
+                    <span className="block text-xs font-bold uppercase tracking-[0.08em] text-[#4b328b] mb-1">
+                      Visibility Status
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="form_is_active"
+                        checked={formData.is_active}
+                        onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
+                        className="h-5 w-5 accent-[#6e63b8] rounded"
+                      />
+                      <label htmlFor="form_is_active" className="text-xs font-semibold text-[#4b328b] cursor-pointer">
+                        Product is active
+                      </label>
+                    </div>
+                  </div>
 
                   <div className="flex flex-col justify-center gap-1">
                     <span className="block text-xs font-bold uppercase tracking-[0.08em] text-[#4b328b] mb-1">
@@ -1200,12 +1027,12 @@ export default function AdminProductsPage() {
                     <div className="flex items-center gap-2">
                       <input
                         type="checkbox"
-                        id="form_is_featured"
-                        checked={formData.is_featured}
-                        onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
+                        id="form_featured"
+                        checked={formData.featured}
+                        onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
                         className="h-5 w-5 accent-[#6e63b8] rounded"
                       />
-                      <label htmlFor="form_is_featured" className="text-xs font-semibold text-[#4b328b] cursor-pointer">
+                      <label htmlFor="form_featured" className="text-xs font-semibold text-[#4b328b] cursor-pointer">
                         Mark as featured on homepage
                       </label>
                     </div>

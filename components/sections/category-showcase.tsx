@@ -9,37 +9,37 @@ const collections = [
     title: "New Arrivals",
     subtitle: "Just Dropped",
     href: "/shop?sort=newest",
-    image: "/assets/11.jpeg"
+    image: "/assets/1.png"
   },
   {
     title: "Casual Wear",
     subtitle: "Everyday Ease",
     href: "/shop?category=casual-wear",
-    image: "/assets/4.jpeg"
+    image: "/assets/4.png"
   },
   {
     title: "Ethnic Collection",
     subtitle: "Timeless Heritage",
     href: "/shop?category=ethnic-wear",
-    image: "/assets/2.jpeg"
+    image: "/assets/2.png"
   },
   {
     title: "Festive Collection",
     subtitle: "Stellar Celebrations",
     href: "/shop?category=festive",
-    image: "/assets/7.jpeg"
+    image: "/assets/7.png"
   },
   {
     title: "Best Sellers",
     subtitle: "Most Loved",
     href: "/shop?sort=featured",
-    image: "/assets/3.jpeg"
+    image: "/assets/3.png"
   },
   {
     title: "Trending Now",
     subtitle: "Hot This Season",
     href: "/shop?sort=newest",
-    image: "/assets/8.jpeg"
+    image: "/assets/8.png"
   }
 ];
 

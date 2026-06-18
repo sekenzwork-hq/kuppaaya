@@ -98,7 +98,7 @@ export default async function AdminPage() {
                     </div>
                     <div className="text-right shrink-0">
                       <p className="text-xs font-bold text-[#4b328b]">₹{product.price}</p>
-                      <p className="text-[9px] text-[#6b6680]">Stock: {product.stock}</p>
+                      <p className="text-[9px] text-[#6b6680]">Stock: {product.stock_quantity}</p>
                     </div>
                   </div>
                 ))
@@ -147,7 +147,7 @@ export default async function AdminPage() {
                     </div>
                     <div className="text-right shrink-0">
                       <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-0.5 text-[9px] font-medium text-red-700 border border-red-200">
-                        {product.stock} left
+                        {product.stock_quantity} left
                       </span>
                       <p className="text-[9px] text-[#6b6680] mt-0.5">Price: ₹{product.price}</p>
                     </div>
@@ -190,18 +190,16 @@ export default async function AdminPage() {
                     <div className="min-w-0 flex-1">
                       <h4 className="truncate text-xs font-bold text-[#21183d]">{product.name}</h4>
                       <p className="truncate text-[10px] text-[#6b6680]">
-                        {product.status === "active" ? (
+                        {product.is_active ? (
                           <span className="text-emerald-600 font-semibold">Active</span>
-                        ) : product.status === "draft" ? (
-                          <span className="text-slate-500 font-semibold">Draft</span>
                         ) : (
-                          <span className="text-red-500 font-semibold">Archived</span>
+                          <span className="text-slate-500 font-semibold">Inactive</span>
                         )}
                       </p>
                     </div>
                     <div className="text-right shrink-0">
                       <p className="text-xs font-bold text-[#4b328b]">₹{product.price}</p>
-                      <p className="text-[9px] text-[#6b6680]">Stock: {product.stock}</p>
+                      <p className="text-[9px] text-[#6b6680]">Stock: {product.stock_quantity}</p>
                     </div>
                   </div>
                 ))

@@ -24,8 +24,6 @@ export function ImageUploader({
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const hasSupabase = typeof window !== "undefined" && !!process.env.NEXT_PUBLIC_SUPABASE_URL;
-
   // Compress image helper using canvas
   const compressImage = (file: File): Promise<Blob> => {
     return new Promise((resolve) => {
@@ -77,17 +75,6 @@ export function ImageUploader({
     const compressedFile = new File([compressedBlob], file.name, {
       type: "image/jpeg"
     });
-
-    if (!hasSupabase) {
-      // Return base64 URL as fallback
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(compressedFile);
-        reader.onloadend = () => {
-          resolve(reader.result as string);
-        };
-      });
-    }
 
     const supabase = createClient();
     const fileExt = "jpg";
@@ -163,18 +150,15 @@ export function ImageUploader({
   const handleRemove = async (index: number) => {
     const urlToRemove = images[index];
 
-    // Try deleting from Supabase
-    if (hasSupabase && urlToRemove.includes(bucket)) {
-      try {
-        const supabase = createClient();
-        const parts = urlToRemove.split(`/${bucket}/`);
-        if (parts.length > 1) {
-          const filePath = parts[1];
-          await supabase.storage.from(bucket).remove([filePath]);
-        }
-      } catch (err) {
-        console.error("Error deleting file from storage:", err);
+    try {
+      const supabase = createClient();
+      const parts = urlToRemove.split(`/${bucket}/`);
+      if (parts.length > 1) {
+        const filePath = parts[1];
+        await supabase.storage.from(bucket).remove([filePath]);
       }
+    } catch (err) {
+      console.error("Error deleting file from storage:", err);
     }
 
     const newImages = images.filter((_, i) => i !== index);

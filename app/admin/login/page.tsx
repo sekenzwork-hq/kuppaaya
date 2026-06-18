@@ -15,27 +15,6 @@ export default function AdminLoginPage() {
   async function login(event: React.FormEvent) {
     event.preventDefault();
 
-    const hasSupabase = !!process.env.NEXT_PUBLIC_SUPABASE_URL;
-    if (!hasSupabase) {
-      try {
-        const res = await fetch("/api/admin/auth", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password })
-        });
-        const json = await res.json();
-        if (json.success) {
-          router.push("/admin");
-          router.refresh();
-        } else {
-          setStatus(json.error || "Login failed");
-        }
-      } catch (err: any) {
-        setStatus(err.message || "Failed to log in");
-      }
-      return;
-    }
-
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) setStatus(error.message);

@@ -20,14 +20,6 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   async function handleSignOut() {
-    const hasSupabase = !!process.env.NEXT_PUBLIC_SUPABASE_URL;
-    if (!hasSupabase) {
-      await fetch("/api/admin/auth", { method: "DELETE" });
-      router.push("/admin/login");
-      router.refresh();
-      return;
-    }
-
     const { createClient } = await import("@/lib/supabase/client");
     const supabase = createClient();
     await supabase.auth.signOut();
