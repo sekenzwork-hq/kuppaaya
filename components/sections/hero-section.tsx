@@ -205,7 +205,7 @@ y: 0
           </motion.div>
 
           {/* Sequential Headline Slide Up */}
-          <h1 className="text-5xl leading-[1.08] font-bold text-[#21183d] sm:text-6xl lg:text-[84px] tracking-tight">
+          <h1 className="text-4xl xs:text-5xl leading-[1.08] font-bold text-[#21183d] sm:text-6xl lg:text-[84px] tracking-tight">
             <motion.span variants={slideUpVariants} className="block overflow-hidden">
               Fashion That
             </motion.span>
@@ -265,7 +265,7 @@ y: 0
           {/* Quick Metrics: Transformed to Glass Cards */}
           <motion.div
             variants={slideUpVariants}
-            className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-[#4b328b]/5 pt-8"
+            className="mt-10 sm:mt-16 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 border-t border-[#4b328b]/5 pt-8"
           >
             {featureCards.map((card, idx) => {
               const Icon = card.icon;
@@ -273,7 +273,7 @@ y: 0
                 <motion.div
                   key={card.title}
                   whileHover={{ y: -4, backgroundColor: "rgba(255, 255, 255, 0.9)" }}
-                  className="glass rounded-xl p-4 text-left border border-white/50 bg-white/40 shadow-sm transition-all duration-300"
+                  className="glass rounded-xl p-3 sm:p-4 text-left border border-white/50 bg-white/40 shadow-sm transition-all duration-300"
                 >
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-[#6e63b8]/10 text-[#6e63b8] mb-3">
                     <Icon size={16} />
@@ -326,11 +326,11 @@ y: 0
             style={{ x: tagParallaxX, y: tagParallaxY }}
             animate={{ y: [0, -12, 0] }}
             transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
-            className="absolute left-[-20px] top-[15%] z-20"
+            className="absolute left-[-10px] sm:left-[-20px] top-[15%] z-20"
           >
-            <div className="glass rounded-full border border-white/60 bg-white/70 px-4 py-2 shadow-lg flex items-center gap-1.5 backdrop-blur-md">
-              <span className="w-2 h-2 rounded-full bg-[#5faedb] animate-ping" />
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#21183d]">
+            <div className="glass rounded-full border border-white/60 bg-white/70 px-2 py-1 sm:px-4 sm:py-2 shadow-lg flex items-center gap-1 sm:gap-1.5 backdrop-blur-md">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#5faedb] animate-ping" />
+              <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-[#21183d]">
                 New Arrival
               </span>
             </div>
@@ -341,11 +341,11 @@ y: 0
             style={{ x: tagParallaxX, y: tagParallaxY }}
             animate={{ y: [0, 14, 0] }}
             transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-            className="absolute right-[-15px] top-[40%] z-20"
+            className="absolute right-[-5px] sm:right-[-15px] top-[40%] z-20"
           >
-            <div className="glass rounded-full border border-white/60 bg-white/70 px-4 py-2 shadow-lg flex items-center gap-1.5 backdrop-blur-md">
-              <Heart size={10} className="text-[#6e63b8] fill-[#6e63b8]" />
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#21183d]">
+            <div className="glass rounded-full border border-white/60 bg-white/70 px-2 py-1 sm:px-4 sm:py-2 shadow-lg flex items-center gap-1 sm:gap-1.5 backdrop-blur-md">
+              <Heart className="w-2.5 h-2.5 sm:w-[10px] sm:h-[10px] text-[#6e63b8] fill-[#6e63b8]" />
+              <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-[#21183d]">
                 Trending Now
               </span>
             </div>
@@ -356,11 +356,11 @@ y: 0
             style={{ x: tagParallaxX, y: tagParallaxY }}
             animate={{ y: [0, -10, 0] }}
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-            className="absolute left-[10px] bottom-[5%] z-20"
+            className="absolute left-[5px] sm:left-[10px] bottom-[5%] z-20"
           >
-            <div className="glass rounded-full border border-white/60 bg-white/70 px-4 py-2 shadow-lg flex items-center gap-1.5 backdrop-blur-md">
-              <Sparkles size={10} className="text-[#4b328b]" />
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#21183d]">
+            <div className="glass rounded-full border border-white/60 bg-white/70 px-2 py-1 sm:px-4 sm:py-2 shadow-lg flex items-center gap-1 sm:gap-1.5 backdrop-blur-md">
+              <Sparkles className="w-2.5 h-2.5 sm:w-[10px] sm:h-[10px] text-[#4b328b]" />
+              <span className="text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider text-[#21183d]">
                 Best Seller
               </span>
             </div>

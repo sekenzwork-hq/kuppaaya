@@ -36,7 +36,7 @@ type ProductImage = {
   id?: string | number;
   product_id?: string | number;
   image_url: string;
-  sort_order: number;
+  display_order: number;
 };
 
 type ProductVariant = {
@@ -308,7 +308,7 @@ export default function AdminProductsPage() {
         const imageRows = formData.product_images.map((img, index) => ({
           product_id: savedProductId,
           image_url: img.image_url,
-          sort_order: index
+          display_order: index
         }));
         const { error: imgErr } = await supabase.from("product_images").insert(imageRows);
         if (imgErr) throw imgErr;
@@ -1054,7 +1054,7 @@ export default function AdminProductsPage() {
                     onChange={(urls) =>
                       setFormData({
                         ...formData,
-                        product_images: urls.map((url, idx) => ({ image_url: url, sort_order: idx }))
+                        product_images: urls.map((url, idx) => ({ image_url: url, display_order: idx }))
                       })
                     }
                     multiple={true}

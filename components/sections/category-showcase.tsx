@@ -59,7 +59,7 @@ export function CategoryShowcase() {
         </div>
 
         {/* 6 Category Cards Grid */}
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-3 sm:gap-6 grid-cols-2 sm:grid-cols-2 lg:grid-cols-3">
           {collections.map((col, index) => (
             <motion.div
               key={col.title}
@@ -88,14 +88,14 @@ export function CategoryShowcase() {
                 <div className="absolute inset-0 bg-gradient-to-tr from-[#6e63b8]/40 to-[#5faedb]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                 {/* Content */}
-                <div className="absolute inset-x-6 bottom-6 text-left text-white z-10">
-                  <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#5faedb]">
+                <div className="absolute inset-x-3 bottom-3 sm:inset-x-6 sm:bottom-6 text-left text-white z-10">
+                  <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.2em] text-[#5faedb]">
                     {col.subtitle}
                   </span>
-                  <h3 className="mt-1 text-2xl font-bold tracking-tight text-white group-hover:text-white transition-colors duration-300">
+                  <h3 className="mt-0.5 sm:mt-1 text-base sm:text-2xl font-bold tracking-tight text-white group-hover:text-white transition-colors duration-300">
                     {col.title}
                   </h3>
-                  <div className="mt-4 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-white/90">
+                  <div className="mt-2 sm:mt-4 flex items-center gap-1.5 sm:gap-2 text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-white/90">
                     <span>Explore Shop</span>
                     <span className="translate-x-0 group-hover:translate-x-1 transition-transform duration-300">→</span>
                   </div>

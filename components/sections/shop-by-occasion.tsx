@@ -59,7 +59,7 @@ export function ShopByOccasion() {
         </div>
 
         {/* Asymmetrical Grid Showcase */}
-        <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
+        <div className="grid gap-3 sm:gap-6 grid-cols-2 md:grid-cols-3">
           {occasions.map((occ, index) => (
             <motion.div
               key={occ.name}
@@ -69,7 +69,7 @@ export function ShopByOccasion() {
               transition={{ delay: index * 0.05, duration: 0.6 }}
               className={`relative rounded-2xl overflow-hidden shadow-md group ${occ.gridClass} bg-white`}
             >
-              <Link href={occ.href} className="block relative h-64 md:h-80 overflow-hidden">
+              <Link href={occ.href} className="block relative h-40 sm:h-64 md:h-80 overflow-hidden">
                 <Image
                   src={occ.image}
                   alt={occ.name}
@@ -83,11 +83,11 @@ export function ShopByOccasion() {
                 <div className="absolute inset-0 bg-[#6e63b8]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                 {/* Floating Card Title */}
-                <div className="absolute bottom-6 left-6 text-left">
-                  <h3 className="text-xl font-bold text-white tracking-tight">
+                <div className="absolute bottom-3 left-3 sm:bottom-6 sm:left-6 text-left">
+                  <h3 className="text-sm sm:text-xl font-bold text-white tracking-tight">
                     {occ.name}
                   </h3>
-                  <div className="mt-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-[#5faedb]">
+                  <div className="mt-1 sm:mt-2 flex items-center gap-1 sm:gap-1.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-[#5faedb]">
                     <span>View Edit</span>
                     <span className="translate-x-0 group-hover:translate-x-1 transition-transform duration-200">→</span>
                   </div>

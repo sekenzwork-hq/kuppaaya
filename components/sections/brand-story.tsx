@@ -42,9 +42,9 @@ export function BrandStory() {
             At Kuppaaya, we believe fashion is more than clothing—it is confidence, individuality, and self-expression. Every collection is thoughtfully curated to blend elegance, comfort, and contemporary style for women who embrace every moment with confidence.
           </p>
           
-          <div className="mt-8 grid gap-4 grid-cols-3">
+          <div className="mt-8 grid gap-3 grid-cols-3">
             {["Confidence", "Comfort", "Elegance"].map((value) => (
-              <div key={value} className="glass rounded-xl p-5 text-center font-display text-lg font-bold text-[#4b328b]">
+              <div key={value} className="glass rounded-xl p-3 sm:p-5 text-center font-display text-xs sm:text-lg font-bold text-[#4b328b]">
                 {value}
               </div>
             ))}

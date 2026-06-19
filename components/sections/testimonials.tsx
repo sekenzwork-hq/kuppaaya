@@ -36,7 +36,7 @@ export function Testimonials() {
         </div>
 
         {/* Grid review cards */}
-        <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 text-left">
+        <div className="mt-8 sm:mt-16 grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3 text-left">
           {testimonials.map((t, index) => (
             <motion.figure
               key={t.name}
@@ -44,12 +44,12 @@ export function Testimonials() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.08, duration: 0.6 }}
-              className="glass rounded-2xl border border-[#4b328b]/5 p-8 bg-white/60 hover:shadow-xl hover:bg-white transition-all duration-300 flex flex-col justify-between"
+              className="glass rounded-2xl border border-[#4b328b]/5 p-5 sm:p-8 bg-white/60 hover:shadow-xl hover:bg-white transition-all duration-300 flex flex-col justify-between"
             >
-              <blockquote className="text-base leading-8 text-[#21183d] font-normal italic">
+              <blockquote className="text-sm sm:text-base leading-7 sm:leading-8 text-[#21183d] font-normal italic">
                 “{t.quote}”
               </blockquote>
-              <div className="mt-8 border-t border-[#4b328b]/5 pt-4">
+              <div className="mt-6 sm:mt-8 border-t border-[#4b328b]/5 pt-4">
                 <figcaption className="text-sm font-bold text-[#4b328b]">{t.name}</figcaption>
                 <span className="text-[10px] uppercase font-bold tracking-wider text-[#6b6680] mt-0.5 block">
                   {t.role}

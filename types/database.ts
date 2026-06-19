@@ -17,11 +17,10 @@ export type Subcategory = {
 };
 
 export type ProductImage = {
-  id: string;
-  product_id: string;
+  id: string | number;
+  product_id: string | number;
   image_url: string;
-  alt_text?: string | null;
-  sort_order: number;
+  display_order: number;
 };
 
 export type ProductVariant = {

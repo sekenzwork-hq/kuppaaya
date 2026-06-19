@@ -12,7 +12,8 @@ export function TrendingNowSlider({ products }: { products: Product[] }) {
     const container = scrollContainerRef.current;
     if (!container) return;
 
-    const scrollAmount = 340; // Approx card width + gap
+    const isMobile = typeof window !== "undefined" && window.innerWidth < 640;
+    const scrollAmount = isMobile ? 210 : 340; // Approx card width + gap
     const target =
       direction === "left"
         ? container.scrollLeft - scrollAmount
@@ -46,11 +47,11 @@ export function TrendingNowSlider({ products }: { products: Product[] }) {
       {/* Horizontal scrolling track */}
       <div
         ref={scrollContainerRef}
-        className="flex gap-6 overflow-x-auto pb-6 scrollbar-hide snap-x snap-mandatory scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0"
+        className="flex gap-3 sm:gap-6 overflow-x-auto pb-6 scrollbar-hide snap-x snap-mandatory scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {products.map((product) => (
-          <div key={product.id} className="min-w-[280px] w-[280px] sm:min-w-[320px] sm:w-[320px] snap-start shrink-0">
+          <div key={product.id} className="min-w-[170px] w-[170px] xs:min-w-[200px] xs:w-[200px] sm:min-w-[320px] sm:w-[320px] snap-start shrink-0">
             <ProductCard product={product} />
           </div>
         ))}

@@ -50,7 +50,7 @@ export function WhyKuppaaya() {
         </div>
 
         {/* Cards Grid */}
-        <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-4 text-left">
+        <div className="mt-8 sm:mt-16 grid gap-3 sm:gap-6 grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 text-left">
           {valueProps.map((prop, idx) => {
             const Icon = prop.icon;
             return (
@@ -60,18 +60,18 @@ export function WhyKuppaaya() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-40px" }}
                 transition={{ delay: idx * 0.08, duration: 0.5 }}
-                className="glass relative rounded-2xl border border-[#4b328b]/5 p-7 bg-slate-50/50 hover:bg-white hover:border-[#6e63b8]/15 hover:shadow-lg transition-all duration-300"
+                className="glass relative rounded-2xl border border-[#4b328b]/5 p-4 sm:p-7 bg-slate-50/50 hover:bg-white hover:border-[#6e63b8]/15 hover:shadow-lg transition-all duration-300"
               >
                 {/* Icon wrapper */}
                 <div 
-                  className="w-12 h-12 rounded-xl flex items-center justify-center mb-6 shadow-sm"
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center mb-4 sm:mb-6 shadow-sm"
                   style={{ backgroundColor: `${prop.color}15`, color: prop.color }}
                 >
-                  <Icon size={22} />
+                  <Icon className="w-5.5 h-5.5 sm:w-[22px] sm:h-[22px]" />
                 </div>
 
-                <h3 className="text-lg font-bold text-[#21183d]">{prop.title}</h3>
-                <p className="mt-3 text-xs leading-6 text-[#6b6680] font-normal">{prop.description}</p>
+                <h3 className="text-sm sm:text-lg font-bold text-[#21183d]">{prop.title}</h3>
+                <p className="mt-2 sm:mt-3 text-[10px] sm:text-xs leading-5 sm:leading-6 text-[#6b6680] font-normal">{prop.description}</p>
               </motion.div>
             );
           })}

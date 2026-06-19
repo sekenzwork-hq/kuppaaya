@@ -66,8 +66,14 @@ textarea {
 }
 
 .container-shell {
-  width: min(1760px, calc(100% - 64px));
+  width: min(1760px, calc(100% - 32px));
   margin-inline: auto;
+}
+
+@media (min-width: 768px) {
+  .container-shell {
+    width: min(1760px, calc(100% - 64px));
+  }
 }
 
 .focus-ring:focus-visible {

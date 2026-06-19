@@ -8,7 +8,7 @@ import { formatPrice } from "@/lib/utils";
 import type { Product } from "@/types/database";
 
 export function ProductDetail({ product }: { product: Product }) {
-  const images = product.product_images?.length ? product.product_images : [{ id: "logo", product_id: product.id, image_url: "/images/logo.png", sort_order: 0 }];
+  const images = product.product_images?.length ? product.product_images : [{ id: "logo", product_id: product.id, image_url: "/images/logo.png", display_order: 0 }];
   const [activeImage, setActiveImage] = useState(images[0].image_url);
   const [variantId, setVariantId] = useState(product.product_variants?.[0]?.id ?? "");
   const [quantity, setQuantity] = useState(1);
