@@ -44,6 +44,7 @@ type ProductVariant = {
   product_id?: string | number;
   size: string;
   color: string;
+  price: number;
   stock_quantity: number;
 };
 
@@ -109,7 +110,12 @@ export default function AdminProductsPage() {
   });
 
   // Variant form draft state
-  const [variantDraft, setVariantDraft] = useState({ size: "", color: "", stock_quantity: 0 });
+  const [variantDraft, setVariantDraft] = useState({
+  size: "",
+  color: "",
+  price: 0,
+  stock_quantity: 0
+});
 
   // Notifications
   const [notification, setNotification] = useState<{ type: "success" | "error"; message: string } | null>(null);
@@ -229,25 +235,43 @@ export default function AdminProductsPage() {
     setFormOpen(true);
   };
 
-  const handleAddVariant = () => {
-    if (!variantDraft.size || !variantDraft.color || variantDraft.stock_quantity < 0) {
-      alert("Please enter a valid Size, Color, and Stock Quantity.");
-      return;
-    }
-    const newVariant: ProductVariant = {
-      id: Math.random().toString(36).substring(2, 9),
-      size: variantDraft.size,
-      color: variantDraft.color,
-      stock_quantity: variantDraft.stock_quantity
-    };
-    setFormData((prev) => ({
-      ...prev,
-      product_variants: [...(prev.product_variants || []), newVariant],
-      // Recalculate total product stock automatically based on variants
-      stock_quantity: (prev.product_variants || []).reduce((acc, curr) => acc + curr.stock_quantity, 0) + newVariant.stock_quantity
-    }));
-    setVariantDraft({ size: "", color: "", stock_quantity: 0 });
+ const handleAddVariant = () => {
+  if (
+    !variantDraft.size ||
+    variantDraft.price <= 0 ||
+    variantDraft.stock_quantity < 0
+  ) {
+    alert("Please enter a valid Size, Price, and Stock Quantity.");
+    return;
+  }
+
+  const newVariant: ProductVariant = {
+    id: Math.random().toString(36).substring(2, 9),
+    product_id: "",
+    size: variantDraft.size,
+    color: variantDraft.color,
+    price: variantDraft.price,
+    stock_quantity: variantDraft.stock_quantity
   };
+
+  setFormData((prev) => ({
+    ...prev,
+    product_variants: [...(prev.product_variants || []), newVariant],
+
+    stock_quantity:
+      (prev.product_variants || []).reduce(
+        (acc, curr) => acc + curr.stock_quantity,
+        0
+      ) + newVariant.stock_quantity
+  }));
+
+  setVariantDraft({
+    size: "",
+    color: "",
+    price: 0,
+    stock_quantity: 0
+  });
+};
 
   const handleRemoveVariant = (index: number) => {
     const updated = (formData.product_variants || []).filter((_, i) => i !== index);
@@ -318,11 +342,12 @@ export default function AdminProductsPage() {
       await supabase.from("product_variants").delete().eq("product_id", savedProductId);
       if (formData.product_variants && formData.product_variants.length > 0) {
         const variantRows = formData.product_variants.map((v) => ({
-          product_id: savedProductId,
-          size: v.size,
-          color: v.color,
-          stock_quantity: v.stock_quantity
-        }));
+  product_id: savedProductId,
+  size: v.size,
+  color: v.color,
+  price: v.price,
+  stock_quantity: v.stock_quantity
+}));
         const { error: varErr } = await supabase.from("product_variants").insert(variantRows);
         if (varErr) throw varErr;
       }
@@ -1069,8 +1094,7 @@ export default function AdminProductsPage() {
                   </span>
                   
                   {/* Variant Input Row */}
-                  <div className="grid gap-3 sm:grid-cols-4 items-end bg-[#4b328b]/5 p-3 rounded-xl border border-[#4b328b]/10 mb-4">
-                    <label className="flex flex-col gap-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#4b328b]">
+<div className="grid gap-3 sm:grid-cols-5 items-end bg-[#4b328b]/5 p-3 rounded-xl border border-[#4b328b]/10 mb-4">                    <label className="flex flex-col gap-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#4b328b]">
                       Size
                       <input
                         type="text"
@@ -1091,6 +1115,23 @@ export default function AdminProductsPage() {
                         className="focus-ring h-9 rounded-lg border border-[#4b328b]/10 bg-white px-3 text-xs font-normal normal-case tracking-normal"
                       />
                     </label>
+                    <label className="flex flex-col gap-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#4b328b]">
+  Price
+  <input
+    type="number"
+    min={0}
+    step="1"
+    placeholder="e.g. 399"
+    value={variantDraft.price || ""}
+    onChange={(e) =>
+      setVariantDraft({
+        ...variantDraft,
+        price: Number(e.target.value)
+      })
+    }
+    className="focus-ring h-9 rounded-lg border border-[#4b328b]/10 bg-white px-3 text-xs font-normal normal-case tracking-normal"
+  />
+</label>
 
                     <label className="flex flex-col gap-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#4b328b]">
                       Stock Qty
@@ -1122,6 +1163,7 @@ export default function AdminProductsPage() {
                           <tr className="bg-slate-50 border-b border-[#4b328b]/10 text-[10px] font-bold text-[#4b328b]/80 uppercase">
                             <th className="px-4 py-2">Color</th>
                             <th className="px-4 py-2">Size</th>
+                            <th className="px-4 py-2">Price</th>
                             <th className="px-4 py-2">Stock</th>
                             <th className="px-4 py-2 text-right">Action</th>
                           </tr>
@@ -1131,6 +1173,9 @@ export default function AdminProductsPage() {
                             <tr key={index}>
                               <td className="px-4 py-2 font-medium text-slate-800">{v.color}</td>
                               <td className="px-4 py-2 font-semibold text-[#6e63b8]">{v.size}</td>
+                              <td className="px-4 py-2 font-semibold text-[#4b328b]">
+                                ₹{v.price}
+                              </td>
                               <td className="px-4 py-2 text-slate-700">{v.stock_quantity} units</td>
                               <td className="px-4 py-2 text-right">
                                 <button

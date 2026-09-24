@@ -1,103 +1,152 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { createClient } from "@/lib/supabase/client";
 
-const collections = [
-  {
-    title: "New Arrivals",
-    subtitle: "Just Dropped",
-    href: "/shop?sort=newest",
-    image: "/assets/1.png"
-  },
-  {
-    title: "Casual Wear",
-    subtitle: "Everyday Ease",
-    href: "/shop?category=casual-wear",
-    image: "/assets/4.png"
-  },
-  {
-    title: "Ethnic Collection",
-    subtitle: "Timeless Heritage",
-    href: "/shop?category=ethnic-wear",
-    image: "/assets/2.png"
-  },
-  {
-    title: "Festive Collection",
-    subtitle: "Stellar Celebrations",
-    href: "/shop?category=festive",
-    image: "/assets/7.png"
-  },
-  {
-    title: "Best Sellers",
-    subtitle: "Most Loved",
-    href: "/shop?sort=featured",
-    image: "/assets/3.png"
-  },
-  {
-    title: "Trending Now",
-    subtitle: "Hot This Season",
-    href: "/shop?sort=newest",
-    image: "/assets/8.png"
-  }
-];
+type Category = {
+  id: string | number;
+  name: string;
+  slug: string;
+  description?: string | null;
+  image_url?: string | null;
+  is_active: boolean;
+};
 
 export function CategoryShowcase() {
+  const supabase = createClient();
+
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadCategories() {
+      try {
+        const { data, error } = await supabase
+          .from("categories")
+          .select("*")
+          .eq("is_active", true)
+          .order("name", { ascending: true });
+
+        if (error) {
+          console.error("Failed to load categories:", error);
+          return;
+        }
+
+        setCategories((data || []) as Category[]);
+      } catch (error) {
+        console.error("Failed to load categories:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadCategories();
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="bg-[#fafbfc] py-24">
+        <div className="container-shell">
+          <div className="mb-14">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#5faedb]">
+              Curated Edits
+            </p>
+
+            <h2 className="mt-3 text-4xl font-bold tracking-tight text-[#21183d] md:text-5xl">
+              Featured Collections
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3">
+            {[1, 2, 3].map((item) => (
+              <div
+                key={item}
+                className="aspect-[4/5] animate-pulse rounded-2xl bg-[#eeeef4]"
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (categories.length === 0) {
+    return null;
+  }
+
   return (
-    <section className="py-24 bg-[#fafbfc]">
+    <section className="bg-[#fafbfc] py-24">
       <div className="container-shell">
         {/* Title block */}
         <div className="mb-14 flex flex-col justify-between gap-4 md:flex-row md:items-end">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#5faedb]">Curated Edits</p>
-            <h2 className="mt-3 text-4xl font-bold tracking-tight text-[#21183d] md:text-5xl">Featured Collections</h2>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#5faedb]">
+              Curated Edits
+            </p>
+
+            <h2 className="mt-3 text-4xl font-bold tracking-tight text-[#21183d] md:text-5xl">
+              Featured Collections
+            </h2>
           </div>
+
           <p className="max-w-md text-sm leading-7 text-[#6b6680]">
-            Explore our thoughtfully structured collections, blending comfort, modern designs, and elegant style.
+            Explore our collections, thoughtfully selected for modern style,
+            comfort, and everyday elegance.
           </p>
         </div>
 
-        {/* 6 Category Cards Grid */}
-        <div className="grid gap-3 sm:gap-6 grid-cols-2 sm:grid-cols-2 lg:grid-cols-3">
-          {collections.map((col, index) => (
+        {/* Database Categories */}
+        <div className="grid grid-cols-2 gap-3 sm:gap-6 lg:grid-cols-3">
+          {categories.map((category, index) => (
             <motion.div
-              key={col.title}
+              key={category.id}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-40px" }}
-              transition={{ delay: index * 0.06, duration: 0.6 }}
-              className="relative group rounded-2xl overflow-hidden shadow-md transition-all duration-500 hover:shadow-xl hover:-translate-y-2 bg-white"
+              transition={{
+                delay: index * 0.06,
+                duration: 0.6,
+              }}
+              className="group relative overflow-hidden rounded-2xl bg-white shadow-md transition-all duration-500 hover:-translate-y-2 hover:shadow-xl"
             >
-              <Link href={col.href} className="block relative aspect-[4/5] overflow-hidden">
-                {/* Image zoom effect */}
+              <Link
+                href={`/shop?category=${encodeURIComponent(category.slug)}`}
+                className="relative block aspect-[4/5] overflow-hidden"
+              >
                 <div className="relative h-full w-full overflow-hidden">
                   <Image
-                    src={col.image}
-                    alt={col.title}
+                    src={category.image_url || "/images/logo.png"}
+                    alt={category.name}
                     fill
-                    className="object-cover transition-transform duration-700 ease-out group-hover:scale-108"
+                    className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                     sizes="(min-width: 1024px) 30vw, (min-width: 640px) 45vw, 90vw"
                   />
                 </div>
 
-                {/* Gradient overlay effect */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#21183d]/90 via-[#21183d]/30 to-[#21183d]/10 opacity-80 group-hover:opacity-95 transition-opacity duration-500" />
-                
-                {/* Brand Logo Watermark Gradient on hover */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-[#6e63b8]/40 to-[#5faedb]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                {/* Gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#21183d]/90 via-[#21183d]/30 to-[#21183d]/10 opacity-80 transition-opacity duration-500 group-hover:opacity-95" />
+
+                {/* Hover gradient */}
+                <div className="absolute inset-0 bg-gradient-to-tr from-[#6e63b8]/40 to-[#5faedb]/10 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
                 {/* Content */}
-                <div className="absolute inset-x-3 bottom-3 sm:inset-x-6 sm:bottom-6 text-left text-white z-10">
-                  <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.2em] text-[#5faedb]">
-                    {col.subtitle}
+                <div className="absolute inset-x-3 bottom-3 z-10 text-left text-white sm:inset-x-6 sm:bottom-6">
+                  <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#5faedb] sm:text-[10px]">
+                    Collection
                   </span>
-                  <h3 className="mt-0.5 sm:mt-1 text-base sm:text-2xl font-bold tracking-tight text-white group-hover:text-white transition-colors duration-300">
-                    {col.title}
+
+                  <h3 className="mt-0.5 text-base font-bold tracking-tight text-white sm:mt-1 sm:text-2xl">
+                    {category.name}
                   </h3>
-                  <div className="mt-2 sm:mt-4 flex items-center gap-1.5 sm:gap-2 text-[9px] sm:text-[11px] font-bold uppercase tracking-wider text-white/90">
+
+                  <div className="mt-2 flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider text-white/90 sm:mt-4 sm:gap-2 sm:text-[11px]">
                     <span>Explore Shop</span>
-                    <span className="translate-x-0 group-hover:translate-x-1 transition-transform duration-300">→</span>
+                    <span className="translate-x-0 transition-transform duration-300 group-hover:translate-x-1">
+                      →
+                    </span>
                   </div>
                 </div>
               </Link>

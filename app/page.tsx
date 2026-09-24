@@ -7,7 +7,6 @@ import { Newsletter } from "@/components/sections/newsletter";
 import { Testimonials } from "@/components/sections/testimonials";
 import { WhyKuppaaya } from "@/components/sections/why-kuppaaya";
 import { TrendingNow } from "@/components/sections/trending-now";
-import { ShopByOccasion } from "@/components/sections/shop-by-occasion";
 
 export default function HomePage() {
   return (
@@ -24,8 +23,6 @@ export default function HomePage() {
       {/* 4. TRENDING NOW SECTION (Horizontal Showcase) */}
       <TrendingNow />
 
-      {/* 5. SHOP BY OCCASION SECTION */}
-      <ShopByOccasion />
 
       {/* 6. BRAND STORY SECTION */}
       <BrandStory />

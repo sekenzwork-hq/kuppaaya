@@ -29,6 +29,7 @@ export type ProductVariant = {
   size: string;
   color: string;
   stock_quantity: number;
+  price: number;
 };
 
 export type Product = {

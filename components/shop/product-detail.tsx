@@ -25,8 +25,7 @@ export function ProductDetail({ product }: { product: Product }) {
       `Size: ${variant?.size ?? "Not selected"}`,
       `Color: ${variant?.color ?? "Not selected"}`,
       `Quantity: ${quantity}`,
-      `Price: ${formatPrice(product.price)}`
-    ].join("\n");
+      `Price: ${formatPrice(variant?.price ?? product.price)}`    ].join("\n");
     return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
   }, [product.name, product.price, quantity, variant]);
 
@@ -54,7 +53,9 @@ export function ProductDetail({ product }: { product: Product }) {
       <section>
         <p className="text-sm font-semibold uppercase tracking-[0.22em] text-[#5faedb]">Product Details</p>
         <h1 className="mt-4 text-5xl leading-tight text-[#21183d]">{product.name}</h1>
-        <div className="mt-5 text-2xl font-semibold text-[#4b328b]">{formatPrice(product.price)}</div>
+        <div className="mt-5 text-2xl font-semibold text-[#4b328b]">
+        {formatPrice(variant?.price ?? product.price)}
+        </div>
         <p className="mt-6 leading-8 text-[#6b6680]">{product.description}</p>
         <div className="mt-8">
           <h2 className="text-sm font-semibold uppercase tracking-[0.18em] text-[#4b328b]">Variant</h2>
