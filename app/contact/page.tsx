@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 
 export default function ContactPage() {
 const contactItems: [LucideIcon, string, string][] = [
-  [MessageCircle, "WhatsApp", "+91 73069 14948"],
+  [MessageCircle, "WhatsApp", "+91 6282610522"],
   [Mail, "Email", "info@kuppaaya.online"],
   [Instagram, "Instagram", "@kuppaaya_"],
 ];

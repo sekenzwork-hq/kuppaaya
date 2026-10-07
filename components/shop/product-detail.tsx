@@ -19,7 +19,7 @@ export function ProductDetail({ product }: { product: Product }) {
   );
 
   const whatsappHref = useMemo(() => {
-    const number = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "917306914948";
+    const number = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER ?? "916282610522";
     const message = [
       `Hello Kuppaaya, I would like to order: ${product.name}`,
       `Size: ${variant?.size ?? "Not selected"}`,
